@@ -1,0 +1,8 @@
+# Make the background a light gradient
+
+View:
+  Replace:
+    UseGradientBackground: True
+    Background: [0.85, 0.85, 0.85]
+    Background2: [1., 1., 1.]
+  Delete: BackgroundTexture

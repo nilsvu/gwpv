@@ -1,0 +1,9 @@
+# Make the background a spherical image
+
+View:
+  Replace:
+    UseGradientBackground: False
+    Background: [0., 0., 0.]
+    BackgroundTexture:
+      Datasource: Skybox
+      Radius: 1000

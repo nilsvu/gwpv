@@ -1,0 +1,9 @@
+# Show a time annotation label
+
+Replace:
+  TimeAnnotation:
+    Format: "Time: %f"
+
+  TimeAnnotationRepresentation:
+    FontSize: 6
+    Color: [1., 1., 1.]

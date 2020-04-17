@@ -1,0 +1,7 @@
+# Make the background a dark gradient
+
+View:
+  Replace:
+    UseGradientBackground: False
+    Background: [0., 0., 0.]
+  Delete: BackgroundTexture

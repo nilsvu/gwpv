@@ -1,0 +1,47 @@
+
+Include:
+  - Datasources
+  - Background/Dark
+  - Resolutions/Test
+
+Animation:
+  Speed: 100
+  Crop: [1000, 2000]
+
+WaveformToVolume:
+  Size: 120
+  RadialScale: 4
+  InvertRotationDirection: True
+  EllMax: 2
+  ActivationOffset: 10
+  ActivationWidth: 10
+  DeactivationWidth: 10
+  KeepEveryNthTimestep: 50
+  StoreIndividualModes: False
+  Polarizations: ["Plus"]
+
+VolumeRepresentation:
+  Representation: Volume
+  VolumeRenderingMode: GPU Based
+  Shade: True
+  ScalarOpacityUnitDistance: 5.
+  ColorBy: Plus strain
+
+TransferFunctions:
+  - Field: Plus strain
+    TransferFunction:
+      Peaks:
+        NumPeaks: 10
+        FirstPeak:
+          Position: 0.003
+          Opacity: 0.03
+        LastPeak:
+          Position: 0.06
+          Opacity: 0.5
+        Colormap: Rainbow Uniform
+
+CameraShots:
+  - Position: [-215.,  155., 0.]
+    ViewUp: [0., 0., 1.]
+    FocalPoint: [0., 0., 0.]
+    ViewAngle: 60.

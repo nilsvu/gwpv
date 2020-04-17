@@ -1,0 +1,13 @@
+
+Animation:
+  Replace:
+    FrameRate: 30
+
+View:
+  Replace:
+    ViewSize: [1920, 1080] # 1080p
+
+WaveformToVolume:
+  Replace:
+    SpatialResolution: 500
+    KeepEveryNthTimestep: 1
