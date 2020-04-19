@@ -16,6 +16,10 @@ setup(
     long_description_content_type="text/markdown",
     packages=['gwpv'],
     scripts=['scripts/gwrender.py'],
+    install_requires=[
+        'numpy', 'scipy', 'h5py', 'spherical_functions', 'numba', 'pyyaml',
+        'tqdm'
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 2.7",
