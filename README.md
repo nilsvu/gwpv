@@ -26,7 +26,10 @@ numerical simulation or a waveform model.
 1. Install [Docker](https://www.docker.com).
 2. `docker run nilsleiffischer/gwpv:latest`
 
-Docker will pull the latest pre-built image and run it. The container runs the `gwrender.py` entrypoint automatically (see [Usage](#usage)). To make your scene configuration files and data available in the container you can mount directories using Docker's `-v` option, e.g.:
+Docker will pull the latest pre-built image and run it. The container runs the
+`gwrender.py` entrypoint automatically (see [Usage](#usage)). To make your scene
+configuration files and data available in the container you can mount
+directories using Docker's `-v` option, e.g.:
 
 ```sh
 docker run \
@@ -38,8 +41,15 @@ docker run \
 
 ### Option 2: Native environment
 
-1. Create a [virtual environment](https://docs.python.org/3/tutorial/venv.html)
-   **with ParaView's Python**. With Python 3 you could do this:
+> It is strongly recommended to use Python 3 for this program. In particular,
+> parallel rendering may not work with Python 2 and setting up the environment
+> with Python 3's [`venv`](https://docs.python.org/3/library/venv.html) is more
+> robust than Python 2's `virtualenv`.
+
+1. Install [ParaView](https://www.paraview.org/download/). Prefer versions
+   with Python 3. This program was tested thoroughly with ParaView version 5.7.
+2. Create a [virtual environment](https://docs.python.org/3/tutorial/venv.html)
+   with ParaView's Python. With Python 3 you could do this:
    ```sh
    path/to/python3 -m venv path/to/new/env
    ```
@@ -55,7 +65,7 @@ docker run \
    The displayed executable may be named `vtkpython`, in which case you can look
    for the `python2` or `python3` executable in the same directory or a `bin`
    subdirectory.
-2. Give ParaView access to the environment. For example, append the following
+3. Give ParaView access to the environment. For example, append the following
    line to `path/to/env/bin/activate` (adjusting the Python version
    appropriately):
    ```sh
@@ -77,7 +87,7 @@ docker run \
    Note that the `path/to/paraview` on MacOS is likely something like
    `/Applications/ParaView-X.Y.Z.app/Contents` if you installed the standard
    GUI application.
-3. Install the following packages in the environment, making sure to use
+4. Install the following packages in the environment, making sure to use
    ParaView's HDF5 when installing `h5py`:
    ```sh
    . env/bin/activate
