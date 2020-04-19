@@ -18,6 +18,12 @@ setup(
         'gwpv', 'gwpv.plugin_util', 'gwpv.render', 'gwpv.scene_configuration'
     ],
     scripts=['scripts/gwrender.py'],
+    package_data={
+        'gwpv': [
+            '../scene_overrides/*.yaml', '../scene_overrides/**/*.yaml',
+            '../paraview_plugins/*.py'
+        ],
+    },
     install_requires=[
         'numpy', 'scipy', 'h5py', 'spherical_functions', 'numba', 'pyyaml',
         'tqdm'
