@@ -129,6 +129,9 @@ and the `PYTHONPATH` contains a reference to its `site-packages`.
 
 ## Licensing and credits
 
-This code is distributed under the MIT license. Please see the [`LICENSE`](LICENSE) for details. When using code from this project or publishing media produced by this code, please include a reference back to the [nilsleiffischer/gwpv](https://github.com/nilsleiffischer/gwpv) repository.
+This code is distributed under the MIT license. Please see the
+[`LICENSE`](LICENSE) for details. When you use code from this project or
+publish media produced by this code, please include a reference back to the
+[nilsleiffischer/gwpv](https://github.com/nilsleiffischer/gwpv) repository.
 
 Copyright (c) 2020 Nils Leif Fischer
