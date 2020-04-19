@@ -1,0 +1,20 @@
+
+name: Tests
+
+on: push
+
+jobs:
+  render_examples:
+    name: Render example scenes
+    runs-on: ubuntu-latest
+    container: nilsleiffischer/gwpv:latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Python package
+        run: |
+          pip install -e .
+      - name: Test
+        # TODO: Add sample data and unit tests to do something useful
+        run: |
+          gwrender.py -h
