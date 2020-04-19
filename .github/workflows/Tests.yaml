@@ -7,7 +7,7 @@ jobs:
   render_examples:
     name: Render example scenes
     runs-on: ubuntu-latest
-    container: nilsleiffischer/gwpv:latest
+    container: nilsleiffischer/gwpv:latest-dev
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
