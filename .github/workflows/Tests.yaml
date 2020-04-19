@@ -4,8 +4,8 @@ name: Tests
 on: push
 
 jobs:
-  render_examples:
-    name: Render example scenes
+  tests:
+    name: Tests
     runs-on: ubuntu-latest
     container: nilsleiffischer/gwpv:latest-dev
     steps:
@@ -14,7 +14,10 @@ jobs:
       - name: Setup Python package
         run: |
           pip install -e .
-      - name: Test
-        # TODO: Add sample data and unit tests to do something useful
+      - name: Run unit tests
+        run: |
+          python -m unittest discover -s tests
+      # TODO: Add sample data to test rendering example scenes
+      - name: Run executable
         run: |
           gwrender.py -h

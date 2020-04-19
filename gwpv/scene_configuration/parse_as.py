@@ -1,9 +1,14 @@
 import os
 
 
-def path(config):
+def path(config, relative_to='.'):
     assert isinstance(config, str), "Expected file system path but got: {}".format(config)
-    return os.path.realpath(os.path.expanduser(config))
+    if config.startswith('/'):
+        return os.path.realpath(config)
+    elif config.startswith('~'):
+        return os.path.realpath(os.path.expanduser(config))
+    else:
+        return os.path.realpath(os.path.join(relative_to, config))
 
 
 def file_and_subfile(config):
