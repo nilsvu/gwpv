@@ -1,7 +1,7 @@
 
 <p align="center" id="banner"><img src="https://raw.githubusercontent.com/nilsleiffischer/gwpv/master/docs/banner.png"></p>
 
-# gwpw
+# gwpv
 
 > Render **g**ravitational **w**aves from waveform data with [**P**ara**V**iew](https://www.paraview.org)
 
