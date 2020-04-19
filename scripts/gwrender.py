@@ -124,17 +124,21 @@ def render_scenes_entrypoint(scenes_file, output_dir, output_prefix,
     import yaml
     from tqdm import tqdm
 
-    scenes = yaml.safe_load(open(scenes_file, 'r'))['Scenes']
-    for scene in tqdm(scenes, desc='Scenes', unit='scene'):
-        render_scene_entrypoint(
-            scene_files=[scenes_file + ':' + scene['Name']] + scene_overrides,
-            force_offscreen_rendering=True,
-            render_movie_to_file=os.path.join(
-                output_dir, output_prefix + scene['Name'] + output_suffix),
-            frames_dir=None,
-            no_render=False,
-            show_progress=True,
-            **kwargs)
+    with tqdm(yaml.safe_load(open(scenes_file, 'r'))['Scenes'],
+              desc='Scenes',
+              unit='scene') as scenes:
+        for scene in scenes:
+            scenes.set_postfix(current_scene=scene['Name'])
+            render_scene_entrypoint(
+                scene_files=([scenes_file + ':' + scene['Name']] +
+                             scene_overrides),
+                force_offscreen_rendering=True,
+                render_movie_to_file=os.path.join(
+                    output_dir, output_prefix + scene['Name'] + output_suffix),
+                frames_dir=None,
+                no_render=False,
+                show_progress=True,
+                **kwargs)
 
 
 if __name__ == "__main__":
