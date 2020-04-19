@@ -1,8 +1,13 @@
+
+<p align="center"><img src="https://raw.githubusercontent.com/nilsleiffischer/gwpv/master/docs/banner.png" style="border-radius: 5px"></p>
+
 # gwpw
 
 > Render **g**ravitational **w**aves from waveform data with [**P**ara**V**iew](https://www.paraview.org)
 
-## Setting up the Python environment:
+## Usage
+
+### Setting up the Python environment:
 
 1. Create a [virtual environment](https://docs.python.org/3/tutorial/venv.html)
    **with ParaView's Python**. With Python 3 you could do this:
@@ -56,7 +61,7 @@
    Python package to install it in "editable" mode, i.e. symlink instead of copy
    it so changes to the repository are reflected in the installation.
 
-## Exploring waveform data in the ParaView GUI application
+### Exploring waveform data in the ParaView GUI application
 
 1. We need to make ParaView aware of our Python environment and the plugins in
    this repository. This is easiest done from the command line. Before launching
@@ -76,7 +81,7 @@
    - Scalar Opacity Unit Distance (try a quarter of the domain size)
    - Transfer function (select _Edit color map_)
 
-## Rendering without the ParaView GUI
+### Rendering without the ParaView GUI
 
 With your Python environment activated (see section above), run
 `scripts/gwrender.py` like this:
@@ -94,3 +99,9 @@ Feel free to turn up the `NUM_JOBS` to render the frames in parallel.
 
 If you get import errors, make sure you have activated the virtual environment
 and the `PYTHONPATH` contains a reference to its `site-packages`.
+
+## Licensing and credits
+
+This code is distributed under the MIT license. Please see the [`LICENSE`](LICENSE) for details. When using code from this project or publishing media produced by this code, please include a reference back to the [nilsleiffischer/gwpv](https://github.com/nilsleiffischer/gwpv) repository.
+
+Copyright (c) 2020 Nils Leif Fischer
