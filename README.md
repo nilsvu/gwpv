@@ -3,6 +3,8 @@
 
 # gwpv
 
+![Tests](https://github.com/nilsleiffischer/gwpv/workflows/Tests/badge.svg)
+
 > Render **g**ravitational **w**aves from waveform data with [**P**ara**V**iew](https://www.paraview.org)
 
 ## Table of contents
