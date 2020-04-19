@@ -5,9 +5,34 @@
 
 > Render **g**ravitational **w**aves from waveform data with [**P**ara**V**iew](https://www.paraview.org)
 
-## Usage
+## Table of contents
 
-### Setting up the Python environment:
+- [Installation](#installation)
+  - [Option 1: Pre-built Docker container](#option-1-pre-built-docker-container)
+  - [Option 2: Native environment](#option-2-native-environment)
+- [Usage](#usage)
+  - [Explore waveform data in the ParaView GUI application](#explore-waveform-data-in-the-paraview-gui-application)
+  - [Render without the ParaView GUI](#render-without-the-paraview-gui)
+- [Licensing and credits](#licensing-and-credits)
+
+## Installation
+
+### Option 1: Pre-built Docker container
+
+1. Install [Docker](https://www.docker.com).
+2. `docker run nilsleiffischer/gwpv:latest`
+
+Docker will pull the latest pre-built image and run it. The container runs the `gwrender.py` entrypoint automatically (see [Usage](#usage)). To make your scene configuration files and data available in the container you can mount directories using Docker's `-v` option, e.g.:
+
+```sh
+docker run \
+  -v /path/to/Examples:/Examples \
+  nilsleiffischer/gwpv:latest \
+  scene /Examples/Rainbow/Rainbow.yaml \
+  -o /Examples/Rainbow/dist
+```
+
+### Option 2: Native environment
 
 1. Create a [virtual environment](https://docs.python.org/3/tutorial/venv.html)
    **with ParaView's Python**. With Python 3 you could do this:
@@ -61,7 +86,9 @@
    Python package to install it in "editable" mode, i.e. symlink instead of copy
    it so changes to the repository are reflected in the installation.
 
-### Exploring waveform data in the ParaView GUI application
+## Usage
+
+### Explore waveform data in the ParaView GUI application
 
 1. We need to make ParaView aware of our Python environment and the plugins in
    this repository. This is easiest done from the command line. Before launching
@@ -74,21 +101,21 @@
    You will now find the plugins provided by this repository in the ParaView GUI
    when you select 'Tools' > 'Manage Plugins'.
 3. Open a waveform data file in ParaView and select the _Waveform Data Reader_
-   to load it.
+   to load it. Waveform data files in [SpEC](https://www.black-holes.org/code/SpEC.html)'s output format are currently supported.
 4. Add the _Waveform To Volume_ filter to the loaded data.
 5. Change the representation to _Volume_ and adjust the following properties:
    - Volume Rendering Mode (try _GPU Based_ and enable _Shade_)
    - Scalar Opacity Unit Distance (try a quarter of the domain size)
    - Transfer function (select _Edit color map_)
 
-### Rendering without the ParaView GUI
+### Render without the ParaView GUI
 
-With your Python environment activated (see section above), run
-`scripts/gwrender.py` like this:
+With your Python environment activated (see [Installation](#installation)), run
+`gwrender.py` like this:
 
 ```sh
-scripts/gwrender.py \
-  Examples/Rainbow/Rainbow.yaml \
+gwrender.py \
+  scene Examples/Rainbow/Rainbow.yaml \
   --render-movie-to-file path/to/output/filename \
   --num-jobs NUM_JOBS \
 ```
