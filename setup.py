@@ -14,7 +14,9 @@ setup(
     url="https://github.com/nilsleiffischer/gwpv",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=['gwpv'],
+    packages=[
+        'gwpv', 'gwpv.plugin_util', 'gwpv.render', 'gwpv.scene_configuration'
+    ],
     scripts=['scripts/gwrender.py'],
     install_requires=[
         'numpy', 'scipy', 'h5py', 'spherical_functions', 'numba', 'pyyaml',
