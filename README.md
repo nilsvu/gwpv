@@ -5,7 +5,9 @@
 
 ![Tests](https://github.com/nilsleiffischer/gwpv/workflows/Tests/badge.svg)
 
-> Render **g**ravitational **w**aves from waveform data with [**P**ara**V**iew](https://www.paraview.org)
+This Python package uses the [ParaView](https://www.paraview.org) scientific
+visualization toolkit to produce 3D renderings of gravitational wave data from a
+numerical simulation or a waveform model.
 
 ## Table of contents
 
