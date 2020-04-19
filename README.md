@@ -1,5 +1,5 @@
 
-<p align="center"><img src="https://raw.githubusercontent.com/nilsleiffischer/gwpv/master/docs/banner.png" style="border-radius: 5px"></p>
+<p align="center" id="banner"><img src="https://raw.githubusercontent.com/nilsleiffischer/gwpv/master/docs/banner.png"></p>
 
 # gwpw
 
