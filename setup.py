@@ -7,7 +7,7 @@ with open('README.md', 'r') as readme_file:
 
 setup(
     name='gwpv',
-    version='0.0.0',
+    version='0.1.0',
     description="Visualize gravitational waves with ParaView",
     author="Nils L. Fischer",
     author_email="nils.fischer@aei.mpg.de",
