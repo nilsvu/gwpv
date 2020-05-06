@@ -6,39 +6,27 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
-def render_with_paraview(force_offscreen_rendering, **kwargs):
-    # Make sure the script was launched with ParaView
-    try:
-        logger.debug("Checking if we're running with 'pvpython'...")
-        import paraview
-    except ImportError:
-        import sys
-        import subprocess
-        logger.debug("Not running with 'pvpython', dispatching...")
-        sys.exit(
-            subprocess.call(['pvpython'] +
-                            (['--force-offscreen-rendering']
-                             if force_offscreen_rendering else []) + sys.argv))
-    logger.debug(
-        "Running with 'pvpython'. Dispatching to rendering function...")
-
-    # Dispatch to rendering function
+# Import render_frames here to make loading the ParaView plugins work with
+# `multiprocessing`.
+# Re-launching the script with `pvpython` is handled in `__main__` so we can
+# parse CLI arguments.
+try:
     from gwpv.render.frames import render_frames
-    render_frames(**kwargs)
+except ImportError:
+    pass
 
 
 def _render_frame_window(job_id_and_frame_window, **kwargs):
-    render_with_paraview(job_id=job_id_and_frame_window[0],
-                         frame_window=job_id_and_frame_window[1],
-                         **kwargs)
+    render_frames(job_id=job_id_and_frame_window[0],
+                  frame_window=job_id_and_frame_window[1],
+                  **kwargs)
 
 
-def render_parallel(num_jobs, frame_window, scene, **kwargs):
+def render_parallel(num_jobs, scene, frame_window=None, **kwargs):
     import functools
     import h5py
     import multiprocessing
-    from gwpv.scene_configuration import parse_as
+    from gwpv.scene_configuration import parse_as, animate
     from tqdm import tqdm
 
     # Infer frame window if needed
@@ -89,7 +77,23 @@ def render_parallel(num_jobs, frame_window, scene, **kwargs):
 
 
 def render_scene_entrypoint(scene_files, keypath_overrides, scene_paths,
-                            num_jobs, render_movie_to_file, **kwargs):
+                            num_jobs, render_movie_to_file,
+                            force_offscreen_rendering, **kwargs):
+    # Make sure the script was launched with ParaView
+    try:
+        logger.debug("Checking if we're running with 'pvpython'...")
+        import paraview
+    except ImportError:
+        import sys
+        import subprocess
+        logger.debug("Not running with 'pvpython', dispatching...")
+        sys.exit(
+            subprocess.call(['pvpython'] +
+                            (['--force-offscreen-rendering']
+                             if force_offscreen_rendering else []) + sys.argv))
+    logger.debug(
+        "Running with 'pvpython'.")
+
     import os
     import subprocess
     from gwpv.scene_configuration.load import load_scene
@@ -106,7 +110,7 @@ def render_scene_entrypoint(scene_files, keypath_overrides, scene_paths,
     scene = load_scene(scene_files, keypath_overrides, paths=scene_paths)
 
     if num_jobs == 1:
-        render_with_paraview(scene=scene, **kwargs)
+        render_frames(scene=scene, **kwargs)
     else:
         render_parallel(num_jobs=num_jobs, scene=scene, **kwargs)
 
@@ -119,27 +123,39 @@ def render_scene_entrypoint(scene_files, keypath_overrides, scene_paths,
 
 
 def render_scenes_entrypoint(scenes_file, output_dir, output_prefix,
-                             output_suffix, scene_overrides, **kwargs):
+                             output_suffix, scene_overrides, scene_paths,
+                             keypath_overrides, num_jobs,
+                             force_offscreen_rendering):
+    import itertools
     import os
     import yaml
+    import subprocess
     from tqdm import tqdm
+
+    common_args = (list(
+        itertools.chain(*[('--override', "=".join(override))
+                          for override in keypath_overrides])) +
+                   list(
+                       itertools.chain(*[('-p', scene_path)
+                                         for scene_path in scene_paths])) +
+                   ['-n', str(num_jobs)])
 
     with tqdm(yaml.safe_load(open(scenes_file, 'r'))['Scenes'],
               desc='Scenes',
               unit='scene') as scenes:
         for scene in scenes:
             scenes.set_postfix(current_scene=scene['Name'])
-            render_scene_entrypoint(
-                scene_files=([scenes_file + ':' + scene['Name']] +
-                             scene_overrides),
-                force_offscreen_rendering=True,
-                render_movie_to_file=os.path.join(
-                    output_dir, output_prefix + scene['Name'] + output_suffix),
-                frames_dir=None,
-                no_render=False,
-                show_progress=True,
-                **kwargs)
-
+            scene_files = [scenes_file + ':' + scene['Name']] + scene_overrides
+            movie_file = os.path.join(
+                output_dir, output_prefix + scene['Name'] + output_suffix)
+            # Run as a subprocess instead of calling `render_scene_entrypoint`
+            # directly to make sure ParaView releases memory after each run
+            subprocess.call(
+                (['pvpython'] + (['--force-offscreen-rendering']
+                                 if force_offscreen_rendering else []) +
+                 [__file__, 'scene'] + scene_files +
+                 ['--render-movie-to-file', movie_file] +
+                 common_args))
 
 if __name__ == "__main__":
     # FIXME:
@@ -195,9 +211,6 @@ if __name__ == "__main__":
         '--show-preview',
         action='store_true',
         help="Show a window with a preview of the full movie.")
-    parser_scene_preview_group.add_argument('--force-offscreen-rendering',
-                                             '-x',
-                                             action='store_true')
     parser_scene.add_argument('--hide-progress',
                                dest='show_progress',
                                action='store_false',
@@ -239,6 +252,9 @@ if __name__ == "__main__":
                                help="Render frames in parallel",
                                type=int,
                                default=1)
+        subparser.add_argument('--force-offscreen-rendering',
+                               '-x',
+                               action='store_true')
         subparser.add_argument('--verbose',
                                '-v',
                                action='count',
