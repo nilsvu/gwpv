@@ -348,8 +348,8 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
             dt = dt[0]
             logger.debug("Waveform sampled uniformly with dt={:.2e}, using optimized interpolation:".format(dt))
             waveform_start_time = waveform_timesteps[0]
-            waveform_start_index = max(
-                0, int(np.floor((np.min(phase) - waveform_start_time) / dt)))
+            waveform_start_index = min(len(waveform_timesteps) - 2, max(
+                0, int(np.floor((np.min(phase) - waveform_start_time) / dt))))
             waveform_stop_index = max(waveform_start_index + 1, min(
                 len(waveform_timesteps),
                 int(np.ceil((np.max(phase) - waveform_start_time) / dt))))
