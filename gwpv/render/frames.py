@@ -104,14 +104,25 @@ def render_frames(scene,
 
     # Generate volume data from the waveform. Also sets the available time range.
     # TODO: Pull KeepEveryNthTimestep out of datasource
-    volume_data = WaveformToVolume(
-        WaveformData=waveform_data,
-        SwshCacheDirectory=parse_as.path(scene['Datasources']['SwshCache']),
-        **scene['WaveformToVolume'])
-    if 'Modes' in scene['WaveformToVolume']:
-        volume_data.Modes = scene['WaveformToVolume']['Modes']
-    if 'Polarizations' in scene['WaveformToVolume']:
-        volume_data.Polarizations = scene['WaveformToVolume']['Polarizations']
+    waveform_to_volume_configs = scene['WaveformToVolume']
+    if isinstance(waveform_to_volume_configs, dict):
+        waveform_to_volume_configs = [
+            {
+                'Object': waveform_to_volume_configs,
+                'VolumeRepresentation': scene['VolumeRepresentation']
+            }
+        ]
+    waveform_to_volume_objects = []
+    for waveform_to_volume_config in waveform_to_volume_configs:
+        volume_data = WaveformToVolume(
+            WaveformData=waveform_data,
+            SwshCacheDirectory=parse_as.path(scene['Datasources']['SwshCache']),
+            **waveform_to_volume_config['Object'])
+        if 'Modes' in waveform_to_volume_config['Object']:
+            volume_data.Modes = waveform_to_volume_config['Object']['Modes']
+        if 'Polarizations' in waveform_to_volume_config['Object']:
+            volume_data.Polarizations = waveform_to_volume_config['Object']['Polarizations']
+        waveform_to_volume_objects.append(volume_data)
 
     # Compute timing and frames information
     time_range_in_M = volume_data.TimestepValues[
@@ -202,12 +213,13 @@ def render_frames(scene,
 
     # Display the volume data. This will trigger computing the volume data at the
     # current time step.
-    volume_color_by = config_color.extract_color_by(scene['VolumeRepresentation'])
-    if len(volume_color_by) > 2:
-        logger.warning(
-            "The 'GPU Based' volume renderer doesn't support multiple components.")
-    volume = pv.Show(volume_data, view, **scene['VolumeRepresentation'])
-    pv.ColorBy(volume, value=volume_color_by)
+    for volume_data, waveform_to_volume_config in zip(waveform_to_volume_objects, waveform_to_volume_configs):
+        volume_color_by = config_color.extract_color_by(waveform_to_volume_config['VolumeRepresentation'])
+        if len(volume_color_by) > 2:
+            logger.warning(
+                "The 'GPU Based' volume renderer doesn't support multiple components.")
+        volume = pv.Show(volume_data, view, **waveform_to_volume_config['VolumeRepresentation'])
+        pv.ColorBy(volume, value=volume_color_by)
 
     # Display the time
     if 'TimeAnnotation' in scene:
