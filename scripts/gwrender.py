@@ -84,15 +84,20 @@ def render_scene_entrypoint(scene_files, keypath_overrides, scene_paths,
         logger.debug("Checking if we're running with 'pvpython'...")
         import paraview
     except ImportError:
+        import os
         import sys
         import subprocess
         logger.debug("Not running with 'pvpython', dispatching...")
+        # Check if we're running in a virtual environment and pass that
+        # information on
+        activate_venv_script = os.path.join(sys.prefix, 'bin', 'activate_this.py')
         sys.exit(
             subprocess.call(['pvpython'] +
                             (['--force-offscreen-rendering']
-                             if force_offscreen_rendering else []) + sys.argv))
-    logger.debug(
-        "Running with 'pvpython'.")
+                             if force_offscreen_rendering else []) + sys.argv +
+                            (['--activate-venv', sys.prefix] if os.path.
+                             exists(activate_venv_script) else [])))
+    logger.debug("Running with 'pvpython'.")
 
     import os
     import subprocess
@@ -260,6 +265,7 @@ if __name__ == "__main__":
                                action='count',
                                default=0,
                                help="Logging verbosity (-v, -vv, ...)")
+        subparser.add_argument('--activate-venv')
 
     # Parse the command line arguments
     args = parser.parse_args()
@@ -268,6 +274,19 @@ if __name__ == "__main__":
     log_level = logging.WARNING - args.verbose * 10
     del args.verbose
     logging.basicConfig(level=log_level)
+
+    # Activate the virtual environment
+    activate_venv = args.activate_venv
+    del args.activate_venv
+    if activate_venv:
+        logger.debug('Activating venv: {}'.format(activate_venv))
+        import os
+        activate_venv_script = os.path.join(activate_venv, 'bin', 'activate_this.py')
+        assert os.path.exists(activate_venv_script), (
+            "No 'bin/activate_this.py' script found in '{}'.".format(
+                activate_venv))
+        with open(activate_venv_script, 'r') as f:
+            exec(f.read(), {'__file__': activate_venv_script})
 
     # Forward to the subcommand's function
     subcommand = args.subcommand

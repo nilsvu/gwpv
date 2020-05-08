@@ -47,7 +47,7 @@ docker run \
 > robust than Python 2's `virtualenv`.
 
 1. Install [ParaView](https://www.paraview.org/download/). Prefer versions
-   with Python 3. This program was tested thoroughly with ParaView version 5.7.
+   with Python 3. This program was tested thoroughly with ParaView version 5.8.
 2. Create a [virtual environment](https://docs.python.org/3/tutorial/venv.html)
    with ParaView's Python. With Python 3 you could do this:
    ```sh
@@ -65,14 +65,18 @@ docker run \
    The displayed executable may be named `vtkpython`, in which case you can look
    for the `python2` or `python3` executable in the same directory or a `bin`
    subdirectory.
-3. Give ParaView access to the environment. For example, append the following
-   line to `path/to/env/bin/activate` (adjusting the Python version
-   appropriately):
+3. Give ParaView access to the environment. If you have created the environment
+   with Python 3's `venv` then copy the `scripts/activate_this.py` to the
+   environment:
    ```sh
-   export PYTHONPATH="$VIRTUAL_ENV/lib/pythonX.Y/site-packages/:$PYTHONPATH"
+   cp scripts/activate_this.py path/to/new/env/bin
    ```
-   This will allow ParaView's Python to pick up the packages installed in the
-   environment once the environment is activated.
+   Note that environments created with the `virtualenv` package include this
+   script automatically and you don't need to copy it. The script is used to
+   activate the environment from within Python scripts. It allows ParaView's
+   Python to pick up the packages installed in the environment (see [this blog
+   post for details](https://blog.kitware.com/using-pvpython-and-virtualenv/)).
+
    You may also want to add the ParaView executables such as `pvpython` to your
    `PATH` when the environment is activated for convenient access. To do so you
    can append the following line to `path/to/env/bin/activate` as well:
@@ -92,7 +96,6 @@ docker run \
    ```sh
    . env/bin/activate
    HDF5_DIR=path/to/paraview/hdf5/ pip install --no-binary=h5py h5py
-   pip install scipy spherical_functions numba pyyaml tqdm
    pip install [-e] path/to/this/repository
    ```
    Note that the `HDF5_DIR` should have `include` and `lib` directories with
