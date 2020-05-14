@@ -54,15 +54,23 @@ def configure_peaks_transfer_function(transfer_fctn, opacity_fctn, tf_config):
         'Position'], tf_config['LastPeak']['Opacity']
     transfer_fctn.RescaleTransferFunction(first_peak, last_peak)
     num_peaks = tf_config['NumPeaks']
-    tf_decay = (last_peak - first_peak) / (num_peaks - 1) / 2
-    peaks = (first_peak +
-             (last_peak - first_peak) * np.linspace(0, 1, num_peaks))
+    if 'Logarithmic' in tf_config and tf_config['Logarithmic']:
+        peaks = np.logspace(np.log10(first_peak),
+                            np.log10(last_peak),
+                            num_peaks,
+                            base=10)
+    else:
+        peaks = (first_peak +
+                (last_peak - first_peak) * np.linspace(0, 1, num_peaks))
+        tf_decay = num_peaks * [(last_peak - first_peak) / (num_peaks - 1) / 2]
+    tf_decay = list(np.diff(peaks) / 2)
+    tf_decay.append(tf_decay[-1])
     opacity_scale = (opacity_last_peak - opacity_first_peak) / (num_peaks - 1)
     set_opacity_function_points(
         opacity_fctn,
-        [[(peak - tf_decay / 100., 0., 0.5, 0.),
+        [[(peak - peak_decay / 100., 0., 0.5, 0.),
           (peak, opacity_first_peak + opacity_scale * i, 0.5, 0.),
-          (peak + tf_decay, 0., 0.5, 0.)] for i, peak in enumerate(peaks)])
+          (peak + peak_decay, 0., 0.5, 0.)] for i, (peak, peak_decay) in enumerate(zip(peaks, tf_decay))])
 
 
 def configure_custom_transfer_function(transfer_fctn, opacity_fctn, tf_config):
