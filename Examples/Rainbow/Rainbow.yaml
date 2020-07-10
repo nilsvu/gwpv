@@ -1,43 +1,33 @@
+# Scene.yaml
 
 Include:
   - Datasources
   - Background/Dark
-  - Resolutions/Test
+  - Resolutions/Low
 
 Animation:
-  Speed: 100
-  Crop: [1000, 2000]
+  Crop: [1000, 4000]
+  Speed: 300
 
 WaveformToVolume:
   Size: 120
-  RadialScale: 4
-  InvertRotationDirection: True
-  EllMax: 2
-  ActivationOffset: 10
-  ActivationWidth: 10
-  DeactivationWidth: 10
-  KeepEveryNthTimestep: 50
-  StoreIndividualModes: False
-  Polarizations: ["Plus"]
+  RadialScale: 8
 
 VolumeRepresentation:
-  Representation: Volume
-  VolumeRenderingMode: GPU Based
-  Shade: True
-  ScalarOpacityUnitDistance: 5.
-  ColorBy: Plus strain
+  ColorBy: Cross strain
+  ScalarOpacityUnitDistance: 4.
 
 TransferFunctions:
-  - Field: Plus strain
+  - Field: Cross strain
     TransferFunction:
       Peaks:
         NumPeaks: 10
         FirstPeak:
-          Position: 0.003
+          Position: 0.017
           Opacity: 0.03
         LastPeak:
-          Position: 0.06
-          Opacity: 0.5
+          Position: 0.6
+          Opacity: 1.
         Colormap: Rainbow Uniform
 
 CameraShots:

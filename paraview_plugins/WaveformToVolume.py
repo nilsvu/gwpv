@@ -200,7 +200,7 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         self.num_points_per_dim = value
         self.Modified()
 
-    @smproperty.intvector(name="KeepEveryNthTimestep", default_values=100)
+    @smproperty.intvector(name="KeepEveryNthTimestep", default_values=1)
     def SetKeepEveryNthTimestep(self, value):
         self.keep_every_n_timestep = value
         self.Modified()
