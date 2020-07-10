@@ -1,22 +1,35 @@
 #!/usr/bin/env python
 
+# This script needs to control its startup sequence to interface with ParaView's
+# `pvpython`.
+#
+# 1. The user launches `gwrender.py` in a Python environment of their choice.
+#    They have `gwpv` and its dependencies installed in this environment.
+#    The `pvpython` executable is available in the `PATH`.
+# 2. CLI arguments are parsed and either the `scene` or the `scenes` entrypoint
+#    is launched:
+#    a. The `scenes` entrypoint launches subprocesses with the `pvpython`
+#       executable that each call the `scene` entrypoint.
+#    b. The `scene`
+# Import render_frames here to make loading
+# the ParaView plugins work with `multiprocessing`. Re-launching the script with
+# `pvpython` is handled in `__main__` so we can parse CLI arguments.
+
+# FIXME:
+# - Generated state file doesn't `UpdatePipeline()` in between adding the
+# reader and the filter, so the timesteps are not loaded from the file yet.
+# This generates an error in the GUI and timesteps are unavailable.
+# I had no success propagating the time range from the reader to the filter
+# in `RequestInformation` so far, neither using information keys nor
+# `vtkFieldData`.
+
 from __future__ import division
 
 import logging
 
-logger = logging.getLogger(__name__)
-
-# Import render_frames here to make loading the ParaView plugins work with
-# `multiprocessing`.
-# Re-launching the script with `pvpython` is handled in `__main__` so we can
-# parse CLI arguments.
-try:
-    from gwpv.render.frames import render_frames
-except ImportError:
-    pass
-
 
 def _render_frame_window(job_id_and_frame_window, **kwargs):
+    from gwpv.render.frames import render_frames
     render_frames(job_id=job_id_and_frame_window[0],
                   frame_window=job_id_and_frame_window[1],
                   **kwargs)
@@ -29,8 +42,12 @@ def render_parallel(num_jobs, scene, frame_window=None, **kwargs):
     from gwpv.scene_configuration import parse_as, animate
     from tqdm import tqdm
 
+    logger = logging.getLogger(__name__)
+
     # Infer frame window if needed
-    if frame_window is None:
+    if 'FreezeTime' in scene['Animation']:
+        frame_window = (0, 1)
+    elif frame_window is None:
         if 'Crop' in scene['Animation']:
             max_animation_length = (scene['Animation']['Crop'][1] -
                                     scene['Animation']['Crop'][0])
@@ -79,28 +96,6 @@ def render_parallel(num_jobs, scene, frame_window=None, **kwargs):
 def render_scene_entrypoint(scene_files, keypath_overrides, scene_paths,
                             num_jobs, render_movie_to_file,
                             force_offscreen_rendering, **kwargs):
-    # Make sure the script was launched with ParaView
-    try:
-        logger.debug("Checking if we're running with 'pvpython'...")
-        import paraview
-    except ImportError:
-        import os
-        import sys
-        import subprocess
-        logger.debug("Not running with 'pvpython', dispatching...")
-        # Check if we're running in a virtual environment and pass that
-        # information on
-        activate_venv_script = os.path.join(sys.prefix, 'bin', 'activate_this.py')
-        sys.exit(
-            subprocess.call(['pvpython'] +
-                            (['--force-offscreen-rendering']
-                             if force_offscreen_rendering else []) + sys.argv +
-                            (['--activate-venv', sys.prefix] if os.path.
-                             exists(activate_venv_script) else [])))
-    logger.debug("Running with 'pvpython'.")
-
-    import os
-    import subprocess
     from gwpv.scene_configuration.load import load_scene
 
     # Validate options
@@ -159,17 +154,10 @@ def render_scenes_entrypoint(scenes_file, output_dir, output_prefix,
                 (['pvpython'] + (['--force-offscreen-rendering']
                                  if force_offscreen_rendering else []) +
                  [__file__, 'scene'] + scene_files +
-                 ['--render-movie-to-file', movie_file] +
-                 common_args))
+                 ['--render-movie-to-file', movie_file] + common_args))
 
-if __name__ == "__main__":
-    # FIXME:
-    # - Generated state file doesn't `UpdatePipeline()` in between adding the
-    # reader and the filter, so the timesteps are not loaded from the file yet.
-    # This generates an error in the GUI and timesteps are unavailable.
-    # I had no success propagating the time range from the reader to the filter
-    # in `RequestInformation` so far, neither using information keys nor
-    # `vtkFieldData`.
+
+if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(
         'gwrender', description="Visualize gravitational waves with ParaView")
@@ -184,9 +172,10 @@ if __name__ == "__main__":
         help=
         "Path to one or more YAML scene configuration files. Entries in later files override those in earlier files.",
         nargs='+')
-    parser_scene.add_argument('--frames-dir', '-o',
-                               help="Output directory for frames",
-                               required=False)
+    parser_scene.add_argument('--frames-dir',
+                              '-o',
+                              help="Output directory for frames",
+                              required=False)
     parser_scene.add_argument(
         '--frame-window',
         help=
@@ -217,9 +206,9 @@ if __name__ == "__main__":
         action='store_true',
         help="Show a window with a preview of the full movie.")
     parser_scene.add_argument('--hide-progress',
-                               dest='show_progress',
-                               action='store_false',
-                               help="Hide the progress bar")
+                              dest='show_progress',
+                              action='store_false',
+                              help="Hide the progress bar")
 
     # `scenes` CLI
     parser_scenes = subparsers.add_parser(
@@ -267,28 +256,57 @@ if __name__ == "__main__":
                                help="Logging verbosity (-v, -vv, ...)")
         subparser.add_argument('--activate-venv')
 
-    # Parse the command line arguments
     args = parser.parse_args()
 
     # Setup logging
-    log_level = logging.WARNING - args.verbose * 10
+    logging.basicConfig(level=logging.WARNING - args.verbose * 10)
     del args.verbose
-    logging.basicConfig(level=log_level)
+    logger = logging.getLogger(__name__)
 
-    # Activate the virtual environment
-    activate_venv = args.activate_venv
-    del args.activate_venv
-    if activate_venv:
+    # Re-launch the script with `pvpython` if necessary
+    try:
+        logger.debug("Checking if we're running with 'pvpython'...")
+        import paraview
+    except ImportError:
+        import os
+        import sys
+        import subprocess
+        logger.debug("Not running with 'pvpython', dispatching...")
+        # Check if we're running in a virtual environment and pass that
+        # information on
+        activate_venv_script = os.path.join(sys.prefix, 'bin',
+                                            'activate_this.py')
+        dispatch_to_pvpython = (['pvpython'] +
+                                (['--force-offscreen-rendering']
+                                 if args.force_offscreen_rendering else []) +
+                                sys.argv +
+                                (['--activate-venv', sys.prefix] if
+                                 os.path.exists(activate_venv_script) else []))
+        logger.debug(
+            "Dispatching to 'pvpython' as: {}".format(dispatch_to_pvpython))
+        sys.exit(subprocess.call(dispatch_to_pvpython))
+    logger.debug("Running with 'pvpython'.")
+
+    # Activate the virtual environment if requested before trying to import from
+    # `gwpv` below
+    if args.activate_venv:
+        activate_venv = args.activate_venv
         logger.debug('Activating venv: {}'.format(activate_venv))
         import os
-        activate_venv_script = os.path.join(activate_venv, 'bin', 'activate_this.py')
+        activate_venv_script = os.path.join(activate_venv, 'bin',
+                                            'activate_this.py')
         assert os.path.exists(activate_venv_script), (
-            "No 'bin/activate_this.py' script found in '{}'.".format(
-                activate_venv))
+            "No 'bin/activate_this.py' script found in '{}'.".format(activate_venv)
+        )
         with open(activate_venv_script, 'r') as f:
             exec(f.read(), {'__file__': activate_venv_script})
+    del args.activate_venv
 
-    # Forward to the subcommand's function
+    # Import render_frames here to make loading the ParaView plugins work with
+    # `multiprocessing`
+    from gwpv.render.frames import render_frames
+
+    # Forward to the user-selected entrypoint
     subcommand = args.subcommand
     del args.subcommand
     subcommand(**vars(args))
