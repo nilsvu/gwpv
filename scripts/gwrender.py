@@ -26,6 +26,7 @@
 from __future__ import division
 
 import logging
+import json
 
 
 def _render_frame_window(job_id_and_frame_window, **kwargs):
@@ -157,6 +158,14 @@ def render_scenes_entrypoint(scenes_file, output_dir, output_prefix,
                  ['--render-movie-to-file', movie_file] + common_args))
 
 
+def render_waveform_entrypoint(scene_files, keypath_overrides, scene_paths,
+                               **kwargs):
+    from gwpv.render.waveform import render_waveform
+    from gwpv.scene_configuration.load import load_scene
+    scene = load_scene(scene_files, keypath_overrides, paths=scene_paths)
+    render_waveform(scene, **kwargs)
+
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(
@@ -225,8 +234,33 @@ if __name__ == '__main__':
     parser_scenes.add_argument('--output-prefix', default="")
     parser_scenes.add_argument('--output-suffix', default="")
 
-    # Common CLI
+    # Common CLI for `scene` and `scenes`
     for subparser in [parser_scene, parser_scenes]:
+        subparser.add_argument('--num-jobs',
+                               '-n',
+                               help="Render frames in parallel",
+                               type=int,
+                               default=1)
+        subparser.add_argument('--force-offscreen-rendering',
+                               '-x',
+                               action='store_true')
+        subparser.add_argument('--activate-venv')
+
+    # `waveform` CLI
+    parser_waveform = subparsers.add_parser(
+        'waveform', help="Render waveform for a scene.")
+    parser_waveform.set_defaults(subcommand=render_waveform_entrypoint)
+    parser_waveform.add_argument(
+        'scene_files',
+        help=
+        "Path to one or more YAML scene configuration files. Entries in later files override those in earlier files.",
+        nargs='+')
+    parser_waveform.add_argument('--output-file', '-o', required=True)
+    parser_waveform.add_argument('--time-merger', type=float, required=True)
+    parser_waveform.add_argument('--mass', type=float, required=True)
+
+    # Common CLI for all entrypoints
+    for subparser in [parser_scene, parser_scenes, parser_waveform]:
         subparser.add_argument(
             '--scene-path',
             '-p',
@@ -241,70 +275,69 @@ if __name__ == '__main__':
             type=lambda kv: kv.split('='),
             dest='keypath_overrides',
             default=[])
-        subparser.add_argument('--num-jobs',
-                               '-n',
-                               help="Render frames in parallel",
-                               type=int,
-                               default=1)
-        subparser.add_argument('--force-offscreen-rendering',
-                               '-x',
-                               action='store_true')
         subparser.add_argument('--verbose',
                                '-v',
                                action='count',
                                default=0,
                                help="Logging verbosity (-v, -vv, ...)")
-        subparser.add_argument('--activate-venv')
+        subparser.add_argument('--logging-config', type=json.loads)
 
     args = parser.parse_args()
 
     # Setup logging
     logging.basicConfig(level=logging.WARNING - args.verbose * 10)
     del args.verbose
+    if args.logging_config is not None:
+        import logging.config
+        if 'version' not in args.logging_config:
+            args.logging_config['version'] = 1
+        logging.config.dictConfig(args.logging_config)
+    del args.logging_config
     logger = logging.getLogger(__name__)
 
     # Re-launch the script with `pvpython` if necessary
-    try:
-        logger.debug("Checking if we're running with 'pvpython'...")
-        import paraview
-    except ImportError:
-        import os
-        import sys
-        import subprocess
-        logger.debug("Not running with 'pvpython', dispatching...")
-        # Check if we're running in a virtual environment and pass that
-        # information on
-        activate_venv_script = os.path.join(sys.prefix, 'bin',
-                                            'activate_this.py')
-        dispatch_to_pvpython = (['pvpython'] +
-                                (['--force-offscreen-rendering']
-                                 if args.force_offscreen_rendering else []) +
-                                sys.argv +
-                                (['--activate-venv', sys.prefix] if
-                                 os.path.exists(activate_venv_script) else []))
-        logger.debug(
-            "Dispatching to 'pvpython' as: {}".format(dispatch_to_pvpython))
-        sys.exit(subprocess.call(dispatch_to_pvpython))
-    logger.debug("Running with 'pvpython'.")
+    if (args.subcommand == render_scene_entrypoint
+            or args.subcommand == render_scenes_entrypoint):
+        try:
+            logger.debug("Checking if we're running with 'pvpython'...")
+            import paraview
+        except ImportError:
+            import os
+            import sys
+            import subprocess
+            logger.debug("Not running with 'pvpython', dispatching...")
+            # Check if we're running in a virtual environment and pass that
+            # information on
+            activate_venv_script = os.path.join(sys.prefix, 'bin',
+                                                'activate_this.py')
+            dispatch_to_pvpython = (
+                ['pvpython'] + (['--force-offscreen-rendering']
+                                if args.force_offscreen_rendering else []) +
+                sys.argv + (['--activate-venv', sys.prefix]
+                            if os.path.exists(activate_venv_script) else []))
+            logger.debug("Dispatching to 'pvpython' as: {}".format(
+                dispatch_to_pvpython))
+            sys.exit(subprocess.call(dispatch_to_pvpython))
+        logger.debug("Running with 'pvpython'.")
 
-    # Activate the virtual environment if requested before trying to import from
-    # `gwpv` below
-    if args.activate_venv:
-        activate_venv = args.activate_venv
-        logger.debug('Activating venv: {}'.format(activate_venv))
-        import os
-        activate_venv_script = os.path.join(activate_venv, 'bin',
-                                            'activate_this.py')
-        assert os.path.exists(activate_venv_script), (
-            "No 'bin/activate_this.py' script found in '{}'.".format(activate_venv)
-        )
-        with open(activate_venv_script, 'r') as f:
-            exec(f.read(), {'__file__': activate_venv_script})
-    del args.activate_venv
+        # Activate the virtual environment if requested before trying to import
+        # from `gwpv` below
+        if args.activate_venv:
+            activate_venv = args.activate_venv
+            logger.debug('Activating venv: {}'.format(activate_venv))
+            import os
+            activate_venv_script = os.path.join(activate_venv, 'bin',
+                                                'activate_this.py')
+            assert os.path.exists(activate_venv_script), (
+                "No 'bin/activate_this.py' script found in '{}'.".format(
+                    activate_venv))
+            with open(activate_venv_script, 'r') as f:
+                exec(f.read(), {'__file__': activate_venv_script})
+        del args.activate_venv
 
-    # Import render_frames here to make loading the ParaView plugins work with
-    # `multiprocessing`
-    from gwpv.render.frames import render_frames
+        # Import render_frames here to make loading the ParaView plugins work
+        # with `multiprocessing`
+        from gwpv.render.frames import render_frames
 
     # Forward to the user-selected entrypoint
     subcommand = args.subcommand
