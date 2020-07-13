@@ -55,24 +55,29 @@ def cached_swsh_grid(D,
                      spin_weight,
                      ell_max,
                      radial_scale,
+                     clip_y_normal,
+                     clip_z_normal,
                      activation_offset,
                      activation_width,
                      deactivation_width,
                      add_one_over_r_scaling,
                      cache_dir=None):
     global _cached_swsh_grid, _cached_r, _cached_grid_id
-    grid_id = (D, N, spin_weight, ell_max, radial_scale, activation_offset,
-               activation_width, deactivation_width)
+    grid_id = (D, N, spin_weight, ell_max, radial_scale, clip_y_normal,
+               clip_z_normal, activation_offset, activation_width,
+               deactivation_width)
     if _cached_grid_id == grid_id:
         logger.debug("Using cached SWSHs grid.")
         return _cached_swsh_grid, _cached_r
     else:
         X = np.linspace(-D, D, N)
-        x, y, z = map(lambda arr: arr.flatten(order='F'), np.meshgrid(X, X, X))
+        Y = np.linspace(-D, 0, N // 2) if clip_y_normal else X
+        Z = np.linspace(-D, 0, N // 2) if clip_z_normal else X
+        x, y, z = map(lambda arr: arr.flatten(order='F'), np.meshgrid(X, Y, Z, indexing='ij'))
         r = np.sqrt(x**2 + y**2 + z**2)
         swsh_grid = None
         if cache_dir:
-            swsh_grid_id = (D, N, spin_weight, ell_max)
+            swsh_grid_id = (D, N, spin_weight, ell_max, clip_y_normal, clip_z_normal)
             swsh_grid_cache_file = os.path.join(
                 cache_dir,
                 str(hash(swsh_grid_id)) + '.npy')
@@ -216,6 +221,18 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         self.radial_scale = value
         self.Modified()
 
+    @smproperty.intvector(name="ClipYNormal", default_values=False)
+    @smdomain.xml('<BooleanDomain name="bool"/>')
+    def SetClipYNormal(self, value):
+        self.clip_y_normal = value
+        self.Modified()
+
+    @smproperty.intvector(name="ClipZNormal", default_values=False)
+    @smdomain.xml('<BooleanDomain name="bool"/>')
+    def SetClipZNormal(self, value):
+        self.clip_z_normal = value
+        self.Modified()
+
     @smproperty.intvector(name="OneOverRScaling", default_values=False)
     @smdomain.xml('<BooleanDomain name="bool"/>')
     def SetOneOverRScaling(self, value):
@@ -277,7 +294,9 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         # information object and pass them on.
         # grid_extents = grid_info.Get(self.GetExecutive().WHOLE_EXTENT())
         N = self.num_points_per_dim
-        grid_extents = [0, N - 1, 0, N - 1, 0, N - 1]
+        N_y = N // 2 if self.clip_y_normal else N
+        N_z = N // 2 if self.clip_z_normal else N
+        grid_extents = [0, N - 1, 0, N_y - 1, 0, N_z - 1]
         util.SetOutputWholeExtent(self, grid_extents)
 
         # This needs the time data from the waveform file, so we may have to
@@ -305,7 +324,9 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         # output.SetOrigin(*grid_data.GetOrigin())
         # output.SetSpacing(*grid_data.GetSpacing())
         dx = 2. * D / N
-        output.SetDimensions(N, N, N)
+        N_y = N // 2 if self.clip_y_normal else N
+        N_z = N // 2 if self.clip_z_normal else N
+        output.SetDimensions(N, N_y, N_z)
         output.SetOrigin(-D, -D, -D)
         output.SetSpacing(dx, dx, dx)
 
@@ -319,6 +340,8 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
             spin_weight=spin_weight,
             ell_max=ell_max,
             radial_scale=self.radial_scale,
+            clip_y_normal=self.clip_y_normal,
+            clip_z_normal=self.clip_z_normal,
             activation_offset=self.activation_offset,
             activation_width=self.activation_width,
             deactivation_width=self.deactivation_width,
