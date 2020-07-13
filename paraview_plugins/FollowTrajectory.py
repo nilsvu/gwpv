@@ -91,9 +91,14 @@ class FollowTrajectory(VTKPythonAlgorithmBase):
             if len(data_at_position.shape) > 0:
                 for i in itertools.product(
                         *map(range, data_at_position.shape)):
-                    data_at_position[i] = np.interp(
-                        time, trajectory_times,
-                        point_data[(slice(None), ) + i])
+                    point_data_i = point_data[(slice(None), ) + i]
+                    if len(trajectory_times) == len(point_data_i):
+                        data_at_position[i] = np.interp(
+                            time, trajectory_times, point_data_i)
+                    else:
+                        logger.warning(
+                            "Unable to interpolate trajectory dataset {}[{}]: Length of dataset ({}) does not match length of trajectory times ({}).".format(
+                                dataset, i, len(point_data_i), len(trajectory_times)))
             else:
                 data_at_position = np.interp(time, trajectory_times,
                                              point_data)
