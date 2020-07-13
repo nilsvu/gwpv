@@ -1,6 +1,7 @@
 import yaml
 import logging
 import os
+from .defaults import apply_defaults
 
 logger = logging.getLogger(__name__)
 
@@ -159,4 +160,5 @@ def load_scene(scene_files, keypath_overrides=None, paths=[]):
         logger.debug("Applying keypath overrides: {}".format(keypath_overrides))
         apply_keypath_overrides(scene, keypath_overrides)
         logger.debug("Overriden scene: {}".format(scene))
+    apply_defaults(scene)
     return scene

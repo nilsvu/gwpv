@@ -106,12 +106,11 @@ def render_frames(scene,
     # TODO: Pull KeepEveryNthTimestep out of datasource
     waveform_to_volume_configs = scene['WaveformToVolume']
     if isinstance(waveform_to_volume_configs, dict):
-        waveform_to_volume_configs = [
-            {
-                'Object': waveform_to_volume_configs,
-                'VolumeRepresentation': scene['VolumeRepresentation']
-            }
-        ]
+        waveform_to_volume_configs = [{
+            'Object': waveform_to_volume_configs,
+        }]
+        if 'VolumeRepresentation' in scene:
+            waveform_to_volume_configs[0]['VolumeRepresentation'] = scene['VolumeRepresentation']
     waveform_to_volume_objects = []
     for waveform_to_volume_config in waveform_to_volume_configs:
         volume_data = WaveformToVolume(
@@ -214,7 +213,7 @@ def render_frames(scene,
     # Display the volume data. This will trigger computing the volume data at the
     # current time step.
     for volume_data, waveform_to_volume_config in zip(waveform_to_volume_objects, waveform_to_volume_configs):
-        vol_repr = waveform_to_volume_config['VolumeRepresentation']
+        vol_repr = waveform_to_volume_config['VolumeRepresentation'] if 'VolumeRepresentation' in waveform_to_volume_config else {}
         volume_color_by = config_color.extract_color_by(vol_repr)
         if 'Representation' not in vol_repr:
             vol_repr['Representation'] = 'Volume'
@@ -226,6 +225,8 @@ def render_frames(scene,
                 and len(volume_color_by) > 2):
             logger.warning(
                 "The 'GPU Based' volume renderer doesn't support multiple components.")
+        if 'ScalarOpacityUnitDistance' not in vol_repr:
+            vol_repr['ScalarOpacityUnitDistance'] = 4.
         volume = pv.Show(volume_data, view, **vol_repr)
         pv.ColorBy(volume, value=volume_color_by)
 
@@ -341,7 +342,19 @@ def render_frames(scene,
             # they still show artifacts, so perhaps more can be done.
             horizon = pv.ExtractSurface(Input=horizon)
             horizon = pv.GenerateSurfaceNormals(Input=horizon)
-            horizon_rep_config = horizon_config['Representation']
+            horizon_rep_config = horizon_config.get('Representation', {})
+            if 'Representation' not in horizon_rep_config:
+                horizon_rep_config['Representation'] = 'Surface'
+            if 'AmbientColor' not in horizon_rep_config:
+                horizon_rep_config['AmbientColor'] = [0., 0., 0.]
+            if 'DiffuseColor' not in horizon_rep_config:
+                horizon_rep_config['DiffuseColor'] = [0., 0., 0.]
+            if 'Specular' not in horizon_rep_config:
+                horizon_rep_config['Specular'] = 0.2
+            if 'SpecularPower' not in horizon_rep_config:
+                horizon_rep_config['SpecularPower'] = 10
+            if 'SpecularColor' not in horizon_rep_config:
+                horizon_rep_config['SpecularColor'] = [1., 1., 1.]
             if 'ColorBy' in horizon_rep_config:
                 horizon_color_by = config_color.extract_color_by(
                     horizon_rep_config)
