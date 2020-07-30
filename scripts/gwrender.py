@@ -125,21 +125,22 @@ def render_scene_entrypoint(scene_files, keypath_overrides, scene_paths,
 
 def render_scenes_entrypoint(scenes_file, output_dir, output_prefix,
                              output_suffix, scene_overrides, scene_paths,
-                             keypath_overrides, num_jobs,
-                             force_offscreen_rendering):
+                             keypath_overrides, render_missing_frames,
+                             num_jobs, force_offscreen_rendering):
     import itertools
     import os
     import yaml
     import subprocess
     from tqdm import tqdm
 
-    common_args = (list(
-        itertools.chain(*[('--override', "=".join(override))
-                          for override in keypath_overrides])) +
-                   list(
-                       itertools.chain(*[('-p', scene_path)
-                                         for scene_path in scene_paths])) +
-                   ['-n', str(num_jobs)])
+    common_args = (
+        list(
+            itertools.chain(*[('--override', "=".join(override))
+                              for override in keypath_overrides])) +
+        (['--render-missing-frames'] if render_missing_frames else []) + list(
+            itertools.chain(*[('-p', scene_path)
+                              for scene_path in scene_paths])) +
+        ['-n', str(num_jobs)])
 
     with tqdm(yaml.safe_load(open(scenes_file, 'r'))['Scenes'],
               desc='Scenes',
@@ -192,10 +193,6 @@ if __name__ == '__main__':
         type=int,
         nargs=2)
     parser_scene.add_argument(
-        '--render-missing-frames',
-        help="Only render missing frames without replacing existing files.",
-        action='store_true')
-    parser_scene.add_argument(
         '--render-movie-to-file',
         help=
         "Name of a file (excluding extension) to render a movie from all frames to."
@@ -236,6 +233,10 @@ if __name__ == '__main__':
 
     # Common CLI for `scene` and `scenes`
     for subparser in [parser_scene, parser_scenes]:
+        subparser.add_argument(
+            '--render-missing-frames',
+            help="Only render missing frames without replacing existing files.",
+            action='store_true')
         subparser.add_argument('--num-jobs',
                                '-n',
                                help="Render frames in parallel",
