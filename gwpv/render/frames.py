@@ -348,6 +348,9 @@ def render_frames(scene,
             with animate.restore_animation_state(animation):
                 horizon = pv.PVDReader(FileName=scene['Datasources']
                                        ['Horizons'][horizon_config['Name']])
+                if horizon_config.get('InterpolateTime', False):
+                    horizon = pv.TemporalInterpolator(
+                        Input=horizon, DiscreteTimeStepInterval=0)
             if 'TimeShift' in horizon_config:
                 horizon = animate.apply_time_shift(horizon,
                                                    horizon_config['TimeShift'],
