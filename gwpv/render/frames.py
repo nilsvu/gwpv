@@ -387,6 +387,19 @@ def render_frames(scene,
                     horizon_config['Visibility'],
                     normalized_time_from_scene=normalized_time_from_scene,
                     scene_time_from_real=scene_time_from_real)
+            if 'Contours' in horizon_config:
+                for contour_config in horizon_config['Contours']:
+                    contour = pv.Contour(Input=horizon,
+                                         **contour_config['Object'])
+                    contour_rep = pv.Show(contour, view,
+                                          **contour_config['Representation'])
+                    pv.ColorBy(contour_rep, None)
+                    if 'Visibility' in horizon_config:
+                        animate.apply_visibility(
+                            contour,
+                            horizon_config['Visibility'],
+                            normalized_time_from_scene=normalized_time_from_scene,
+                            scene_time_from_real=scene_time_from_real)
 
     # Configure transfer functions
     if 'TransferFunctions' in scene:
