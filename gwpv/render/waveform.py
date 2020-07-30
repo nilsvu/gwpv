@@ -39,11 +39,7 @@ def set_size(fig, size, dpi=100, eps=1e-2, give_up=2, min_size_px=10):
             return False
 
 
-def render_waveform(scene,
-                    output_file,
-                    time_merger,
-                    mass,
-                    extra_plot_range=0.095):
+def render_waveform(scene, output_file, time_merger, mass, bounds=None):
     logger = logging.getLogger(__name__)
 
     waveform_file_and_subfile = parse_as.file_and_subfile(
@@ -58,30 +54,25 @@ def render_waveform(scene,
         logger.debug("Waveform has {} samples in time range [{}, {}]M".format(
             len(waveform), time[0], time[-1]))
 
-    i_start = None
-    for i, t_i in enumerate(time):
-        if t_i >= 1000:
-            i_start = i
-            break
-    time = time[i_start:]
-    waveform = waveform[i_start:]
-
     crop = np.array(scene['Animation'].get('Crop', [time[0], time[-1]]),
                     dtype=np.float)
     logger.debug("Cropping animation to [{}, {}]M".format(crop[0], crop[1]))
+
+    if bounds is None:
+        bounds = crop
+    else:
+        bounds = np.asarray(bounds)
 
     # Transform time to seconds
     M_in_s = (const.G / const.c**3 * const.M_sun * mass).value
     time *= M_in_s
     time_merger *= M_in_s
     crop *= M_in_s
-
-    time_plot_range = (time[0], time_merger + extra_plot_range *
-                       (time_merger - time[0]))
+    bounds *= M_in_s
 
     num_extra_time = 100
     time = np.hstack(
-        [time, np.linspace(time[-1], time_plot_range[1], num_extra_time)])
+        [time, np.linspace(time[-1], bounds[1], num_extra_time)])
     waveform = np.vstack([waveform, num_extra_time * [waveform[-1]]])
 
     dpi = 100
@@ -101,7 +92,7 @@ def render_waveform(scene,
                                              fc=(0, 0, 0, 0.5),
                                              ec='none'))
 
-    plt.xlim(*time_plot_range)
+    plt.xlim(*bounds)
     plt.axis('off')
     set_size(fig, (1920 / dpi, 60 / dpi))
 
@@ -143,6 +134,8 @@ def render_waveform(scene,
         progress_bar.update(1)
         return plot_active, time_annotation
 
+    plt.savefig(output_file + '.png', dpi=dpi, facecolor='black')
+
     ani = mpl_animation.FuncAnimation(fig,
                                       animation_update,
                                       frames=np.linspace(
@@ -159,7 +152,3 @@ def render_waveform(scene,
 
     if progress_bar is not None:
         progress_bar.close()
-
-    # plt.savefig('waveform.png',
-    #             dpi=dpi,
-    #             facecolor='black')
