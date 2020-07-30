@@ -12,6 +12,7 @@ def num_frames(max_animation_length, animation_speed, frame_rate):
 
 def get_scene_time(time_config, scene_time_from_real):
     if isinstance(time_config, dict):
+        assert time_config['TimeMode'] in ['Scene', 'Real']
         if time_config['TimeMode'] == 'Scene':
             return time_config['Time']
         elif time_config['TimeMode'] == 'Real':
@@ -78,16 +79,25 @@ def apply_visibility(proxy, config, normalized_time_from_scene, scene_time_from_
         key.KeyValues = [vis_value]
         vis_keyframes.append(key)
     vis_track.KeyFrames = vis_keyframes
-    if 'FadeOut' in config:
+    if 'FadeIn' in config or 'FadeOut' in config:
         alpha_track = pv.GetAnimationTrack('Opacity', proxy=proxy)
         alpha_keyframes = []
-        fade_duration = get_scene_time(config['FadeOut'], scene_time_from_real)
-        for alpha_time, alpha_value in [(config['End'] - fade_duration, 1.),
-                                        (config['End'], 0.)]:
-            key = pv.CompositeKeyFrame()
-            key.KeyTime = normalized_time_from_scene(alpha_time)
-            key.KeyValues = [alpha_value]
-            alpha_keyframes.append(key)
+        if 'FadeIn' in config:
+            fade_duration = get_scene_time(config['FadeIn'], scene_time_from_real)
+            for alpha_time, alpha_value in [(config['Start'], 0.),
+                                            (config['Start'] + fade_duration, 1.)]:
+                key = pv.CompositeKeyFrame()
+                key.KeyTime = normalized_time_from_scene(alpha_time)
+                key.KeyValues = [alpha_value]
+                alpha_keyframes.append(key)
+        if 'FadeOut' in config:
+            fade_duration = get_scene_time(config['FadeOut'], scene_time_from_real)
+            for alpha_time, alpha_value in [(config['End'] - fade_duration, 1.),
+                                            (config['End'], 0.)]:
+                key = pv.CompositeKeyFrame()
+                key.KeyTime = normalized_time_from_scene(alpha_time)
+                key.KeyValues = [alpha_value]
+                alpha_keyframes.append(key)
         alpha_track.KeyFrames = alpha_keyframes
 
 
