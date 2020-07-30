@@ -230,6 +230,20 @@ def render_frames(scene,
         volume = pv.Show(volume_data, view, **vol_repr)
         pv.ColorBy(volume, value=volume_color_by)
 
+    if 'Slices' in scene:
+        for slice_config in scene['Slices']:
+            slice_obj_config = slice_config.get('Object', {})
+            slice = pv.Slice(Input=volume_data)
+            slice.SliceType = 'Plane'
+            slice.SliceOffsetValues = [0.]
+            slice.SliceType.Origin = slice_obj_config.get(
+                'Origin', [0., 0., -0.3])
+            slice.SliceType.Normal = slice_obj_config.get(
+                'Normal', [0., 0., 1.])
+            slice_rep = pv.Show(slice, view,
+                                **slice_config.get('Representation', {}))
+            pv.ColorBy(slice_rep, value=volume_color_by)
+
     # Display the time
     if 'TimeAnnotation' in scene:
         time_annotation = pv.AnnotateTimeFilter(volume_data,
