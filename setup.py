@@ -26,7 +26,7 @@ setup(
     },
     install_requires=[
         'numpy', 'scipy', 'h5py', 'spherical_functions', 'numba', 'pyyaml',
-        'tqdm', 'astropy', 'matplotlib'
+        'tqdm', 'astropy', 'matplotlib', 'requests'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
