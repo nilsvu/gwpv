@@ -26,18 +26,20 @@ numerical simulation or a waveform model.
 1. Install [Docker](https://www.docker.com).
 2. `docker run nilsleiffischer/gwpv:latest`
 
-Docker will pull the latest pre-built image and run it. The container runs the
-`gwrender.py` entrypoint automatically (see [Usage](#usage)). To make your scene
-configuration files and data available in the container you can mount
-directories using Docker's `-v` option, e.g.:
+Docker will pull the latest pre-built image and runs it. The container runs the
+`gwrender.py` entrypoint automatically (see [Usage](#usage)). To output rendered
+frames and load data from your system you can mount directories using Docker's
+`-v` option. Try rendering one of the example scenes:
 
 ```sh
-docker run \
-  -v /path/to/Examples:/Examples \
-  nilsleiffischer/gwpv:latest \
-  scene /Examples/Rainbow/Rainbow.yaml \
-  -o /Examples/Rainbow/dist
+docker run -v $PWD:/out nilsleiffischer/gwpv:latest \
+  scene Examples/Rainbow/Still.yaml -o /out
 ```
+
+Here we mount the current working directory `$PWD` as the directory `/out` in
+the container and use it to output frames. You can mount additional directories
+to make your scene configuration files and data available in the container (see
+[Usage](#usage)).
 
 ### Option 2: Native environment
 
@@ -62,11 +64,13 @@ docker run \
    >>> import sys
    >>> sys.executable
    ```
-   The displayed executable may be named `vtkpython`, in which case you can look
-   for the `python2` or `python3` executable in the same directory or a `bin`
-   subdirectory.
+   On macOS the `pvpython` executable is typically located in
+   `/Applications/ParaView-X.Y.Z.app/Contents/bin`. The Python executable
+   determined by the script above may be named `vtkpython`, in which case you
+   can look for the `python2` or `python3` executable in the same directory or a
+   `bin` subdirectory.
 3. Give ParaView access to the environment. If you have created the environment
-   with Python 3's `venv` then copy the `scripts/activate_this.py` to the
+   with Python 3's `venv` then copy the `scripts/activate_this.py` script to the
    environment:
    ```sh
    cp scripts/activate_this.py path/to/new/env/bin
@@ -88,9 +92,6 @@ docker run \
    ```sh
    export PATH="path/to/paraview/MacOS/:$PATH"
    ```
-   Note that the `path/to/paraview` on MacOS is likely something like
-   `/Applications/ParaView-X.Y.Z.app/Contents` if you installed the standard
-   GUI application.
 4. Install the following packages in the environment, making sure to use
    ParaView's HDF5 when installing `h5py`:
    ```sh
@@ -127,22 +128,29 @@ docker run \
 
 ### Render without the ParaView GUI
 
-With your Python environment activated (see [Installation](#installation)), run
-`gwrender.py` like this:
+Try rendering one of the example scenes like this:
 
 ```sh
-gwrender.py \
-  scene Examples/Rainbow/Rainbow.yaml \
-  --render-movie-to-file path/to/output/filename \
-  --num-jobs NUM_JOBS \
+gwrender.py scene Examples/Rainbow/Still.yaml -o ./
 ```
 
-You find examples for scene configuration files in `Examples/`.
+You find more examples for scene configuration files in `Examples/`. Here's a
+short movie:
 
-Feel free to turn up the `NUM_JOBS` to render the frames in parallel.
+```sh
+gwrender.py scene Examples/Rainbow/Rainbow.yaml \
+  --render-movie-to-file ./Rainbow
+  --num-jobs NUM_JOBS
+```
 
-If you get import errors, make sure you have activated the virtual environment
-and the `PYTHONPATH` contains a reference to its `site-packages`.
+Feel free to turn up `NUM_JOBS` to render the frames in parallel.
+
+You can render multiple scenes sequentially by listing them in a file and
+calling the `scenes` entrypoint:
+
+```sh
+gwrender.py scenes Examples/Rainbow/Scenes.yaml -o ./ --num-jobs NUM_JOBS
+```
 
 ## Licensing and credits
 
