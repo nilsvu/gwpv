@@ -17,7 +17,29 @@ jobs:
       - name: Run unit tests
         run: |
           python -m unittest discover -s tests
-      # TODO: Add sample data to test rendering example scenes
-      - name: Run executable
+      - name: Setup rendering test
         run: |
-          gwrender.py -h
+          mkdir test_render
+          cp Examples/Rainbow/Datasources.example.yaml test_render/Datasources.yaml
+          sed -i -e 's/\/scratch\/example/./' test_render/Datasources.yaml
+      - name: Download test data
+        working-directory: test_render
+        run: |
+          wget https://zenodo.org/record/3321679/files/Lev3/rhOverM_Asymptotic_GeometricUnits_CoM.h5
+      - name: Test 'scene' endpoint
+        working-directory: test_render
+        run: >
+          gwrender.py scene
+          ../Examples/Rainbow/Rainbow.yaml Resolutions/Test
+          -p ./ -o ./dist -n2 -v --frame-window 0 4
+      - name: Test 'scenes' endpoint
+        working-directory: test_render
+        run: >
+          gwrender.py scenes
+          ../Examples/Rainbow/Scenes.yaml Resolutions/Test
+          -p ./ -o ./dist -n2 -v
+      # - name: Test 'waveform' endpoint
+      #   working-directory: test_render
+      #   run: >
+      #     gwrender.py waveform ../Examples/Rainbow/Rainbow.yaml
+      #     --time-merger 5064 --mass 150 -p ./ -o ./dist -v
