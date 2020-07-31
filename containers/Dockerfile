@@ -35,7 +35,7 @@ RUN git clone https://github.com/h5py/h5py /opt/h5py && cd /opt/h5py \
 
 # Install remaining Python dependencies
 RUN pip install numpy scipy spherical_functions numba pyyaml tqdm astropy \
-  matplotlib
+  matplotlib requests
 
 # Make ParaView available in PATH
 ENV PATH /opt/paraview/bin:$PATH
