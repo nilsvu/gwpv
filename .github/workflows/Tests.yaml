@@ -81,3 +81,20 @@ jobs:
   #         tag_with_ref: true
   #         cache_froms: nilsleiffischer/gwpv:latest-dev,nilsleiffischer/gwpv:latest
   #         always_pull: true
+  examples:
+    name: Examples
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rainbow still
+        run: >
+          docker run -v $PWD:/out nilsleiffischer/gwpv:latest
+          scene Examples/Rainbow/Still.yaml -o /out
+      - name: Rainbow movie
+        run: >
+          docker run -v $PWD:/out nilsleiffischer/gwpv:latest
+          scene Examples/Rainbow/Rainbow.yaml
+          --render-movie-to-file /out/Rainbow --num-jobs 2
+      - name: Rainbow scenes
+        run: >
+          docker run -v $PWD:/out nilsleiffischer/gwpv:latest
+          scenes Examples/Rainbow/Scenes.yaml -o /out --num-jobs 2
