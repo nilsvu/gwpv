@@ -1,7 +1,0 @@
-
-Replace:
-  Datasources:
-    Waveform:
-      File: /scratch/example/rhOverM_Asymptotic_GeometricUnits_CoM.h5
-      Subfile: Extrapolated_N2.dir
-    SwshCache: /scratch/example/swsh_cache

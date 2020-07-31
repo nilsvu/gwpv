@@ -3,7 +3,6 @@ env/
 .vscode/
 Resources/
 swsh_cache/
-Datasources.yaml
 dist/
 
 # Python.gitignore
