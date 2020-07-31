@@ -215,18 +215,10 @@ def render_frames(scene,
     for volume_data, waveform_to_volume_config in zip(waveform_to_volume_objects, waveform_to_volume_configs):
         vol_repr = waveform_to_volume_config['VolumeRepresentation'] if 'VolumeRepresentation' in waveform_to_volume_config else {}
         volume_color_by = config_color.extract_color_by(vol_repr)
-        if 'Representation' not in vol_repr:
-            vol_repr['Representation'] = 'Volume'
-        if 'VolumeRenderingMode' not in vol_repr:
-            vol_repr['VolumeRenderingMode'] = 'GPU Based'
-        if 'Shade' not in vol_repr:
-            vol_repr['Shade'] = True
         if (vol_repr['VolumeRenderingMode'] == 'GPU Based'
                 and len(volume_color_by) > 2):
             logger.warning(
                 "The 'GPU Based' volume renderer doesn't support multiple components.")
-        if 'ScalarOpacityUnitDistance' not in vol_repr:
-            vol_repr['ScalarOpacityUnitDistance'] = 4.
         volume = pv.Show(volume_data, view, **vol_repr)
         pv.ColorBy(volume, value=volume_color_by)
 
