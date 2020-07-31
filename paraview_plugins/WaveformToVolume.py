@@ -8,6 +8,7 @@ import numpy as np
 import os
 import logging
 import time
+import hashlib
 from vtkmodules.vtkCommonDataModel import vtkUniformGrid
 from vtkmodules.vtkCommonCore import vtkDataArraySelection
 from vtkmodules.util.vtkAlgorithm import VTKPythonAlgorithmBase
@@ -78,9 +79,11 @@ def cached_swsh_grid(D,
         swsh_grid = None
         if cache_dir:
             swsh_grid_id = (D, N, spin_weight, ell_max, clip_y_normal, clip_z_normal)
+            # Create a somewhat unique filename
+            swsh_grid_hash = int(hashlib.md5(repr(swsh_grid_id).encode('utf-8')).hexdigest(), 16) % 10**8
             swsh_grid_cache_file = os.path.join(
-                cache_dir,
-                str(hash(swsh_grid_id)) + '.npy')
+                cache_dir, ('swsh_grid_D{}_N{}_'.format(D, N) +
+                            str(swsh_grid_hash) + '.npy'))
             if os.path.exists(swsh_grid_cache_file):
                 logger.debug(
                     "Loading cached SWSH grid from file '{}'...".format(
