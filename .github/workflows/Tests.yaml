@@ -42,30 +42,24 @@ jobs:
           python -m unittest discover -s tests
       - name: Setup rendering test
         run: |
-          mkdir test_render
-          cp Examples/Rainbow/Datasources.example.yaml test_render/Datasources.yaml
-          sed -i -e 's/\/scratch\/example/./' test_render/Datasources.yaml
-      - name: Download test data
-        working-directory: test_render
-        run: |
-          wget https://zenodo.org/record/3321679/files/Lev3/rhOverM_Asymptotic_GeometricUnits_CoM.h5
+          mkdir test_rendering
       - name: Test 'scene' endpoint
-        working-directory: test_render
+        working-directory: test_rendering
         run: >
           gwrender.py scene
-          ../Examples/Rainbow/Rainbow.yaml Resolutions/Test
-          -p ./ -o ./dist -n2 -v --frame-window 0 4
+          $GITHUB_WORKSPACE/Examples/Rainbow/Rainbow.yaml Resolutions/Test
+          -o ./ -n2 -v
       - name: Test 'scenes' endpoint
-        working-directory: test_render
+        working-directory: test_rendering
         run: >
           gwrender.py scenes
-          ../Examples/Rainbow/Scenes.yaml Resolutions/Test
-          -p ./ -o ./dist -n2 -v
+          $GITHUB_WORKSPACE/Examples/Rainbow/Scenes.yaml Resolutions/Test
+          -o ./ -n2 -v
       # - name: Test 'waveform' endpoint
-      #   working-directory: test_render
+      #   working-directory: test_rendering
       #   run: >
-      #     gwrender.py waveform ../Examples/Rainbow/Rainbow.yaml
-      #     --time-merger 5064 --mass 150 -p ./ -o ./dist -v
+      #     gwrender.py waveform $GITHUB_WORKSPACE/Examples/Rainbow/Rainbow.yaml
+      #     --time-merger 5064 --mass 150 -o ./ -v
   # deploy-container:
   #   name: Deploy container
   #   needs: tests
@@ -85,10 +79,13 @@ jobs:
     name: Examples
     runs-on: ubuntu-latest
     steps:
+      # Note that the container must run as the user `root` to be able to write
+      # to the $GITHUB_WORKSPACE directory:
+      # https://docs.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners#docker-container-filesystem
       - name: Rainbow still
         run: >
           docker run -v $PWD:/out nilsleiffischer/gwpv:latest
-          scene Examples/Rainbow/Still.yaml -o /out
+          scene Examples/Rainbow/Still.yaml -o /out/Still
       - name: Rainbow movie
         run: >
           docker run -v $PWD:/out nilsleiffischer/gwpv:latest
@@ -97,4 +94,4 @@ jobs:
       - name: Rainbow scenes
         run: >
           docker run -v $PWD:/out nilsleiffischer/gwpv:latest
-          scenes Examples/Rainbow/Scenes.yaml -o /out --num-jobs 2
+          scenes Examples/Rainbow/Scenes.yaml -o /out/Scenes --num-jobs 2

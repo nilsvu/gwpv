@@ -49,7 +49,6 @@ COPY scripts/gwrender.py ./scripts/gwrender.py
 COPY paraview_plugins ./paraview_plugins
 COPY scene_overrides ./scene_overrides
 RUN pip install .
-USER pv-user
 WORKDIR /home/pv-user
 COPY Examples/ ./Examples
 
