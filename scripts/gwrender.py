@@ -6,16 +6,18 @@
 # 1. The user launches `gwrender.py` in a Python environment of their choice.
 #    They have `gwpv` and its dependencies installed in this environment.
 #    The `pvpython` executable is available in the `PATH`.
-# 2. CLI arguments are parsed and either the `scene` or the `scenes` entrypoint
-#    is launched:
-#    a. The `scenes` entrypoint launches subprocesses with the `pvpython`
+# 2. CLI arguments are parsed.
+#    a. The `scene` entrypoint is dispatched to `pvpython` in a subprocess,
+#       passing along the path to the active Python environment.
+#    b. The `scenes` entrypoint launches subprocesses with the `pvpython`
 #       executable that each call the `scene` entrypoint.
-#    b. The `scene`
-# Import render_frames here to make loading
-# the ParaView plugins work with `multiprocessing`. Re-launching the script with
-# `pvpython` is handled in `__main__` so we can parse CLI arguments.
-
+# 3. Now running in `pvpython`, the Python environment is activated using its
+#    `activate_this.py` script.
+# 4. The `gwpv.render.frames` module is imported in the global namespace so
+#    ParaView plugins are loaded and work with `multiprocessing`.
+#
 # FIXME:
+# - Installing in editable mode with `pip install -e` is broken
 # - Generated state file doesn't `UpdatePipeline()` in between adding the
 # reader and the filter, so the timesteps are not loaded from the file yet.
 # This generates an error in the GUI and timesteps are unavailable.
