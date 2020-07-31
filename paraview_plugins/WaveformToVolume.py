@@ -20,15 +20,15 @@ import gwpv.plugin_util.data_array_selection as das_util
 
 logger = logging.getLogger(__name__)
 
-logger.info(
-    "Loading spherical_functions module (compiling SWSHs with numba)...")
-import spherical_functions as sf
-import quaternion as qt
-logger.info("Spherical_functions module loaded.")
-
 
 def get_mode_name(l, abs_m):
     return "({}, {}) Mode".format(l, abs_m)
+
+
+# Reproduces `spherical_functions.LM_index` so we don't need to import the
+# `spherical_functions` module when using a cached SWSH grid
+def LM_index(ell, m, ell_min):
+    return ell * (ell + 1) - ell_min ** 2 + m
 
 
 def smoothstep(x):
@@ -88,6 +88,10 @@ def cached_swsh_grid(D,
                 swsh_grid = np.load(swsh_grid_cache_file)
         if swsh_grid is None:
             logger.info("No cached SWSH grid found, computing now...")
+            logger.info("Loading spherical_functions module (compiling SWSHs with numba)...")
+            import spherical_functions as sf
+            import quaternion as qt
+            logger.info("Spherical_functions module loaded.")
             start_time = time.time()
             th = np.arccos(z / r)
             phi = np.arctan2(y, x)
@@ -399,7 +403,7 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
                 for sign_m in (-1, 1):
                     m = abs_m * sign_m
                     dataset_name = "Y_l{}_m{}".format(l, m)
-                    mode_profile = swsh_grid[:, sf.LM_index(l, m, 0)]
+                    mode_profile = swsh_grid[:, LM_index(l, m, 0)]
                     # mode_profile = vtknp.vtk_to_numpy(grid_data.GetPointData()[dataset_name])
                     waveform_mode_data = waveform_data.RowData[dataset_name][::skip_timesteps]
                     if isinstance(waveform_mode_data, dsa.VTKNoneArray):
