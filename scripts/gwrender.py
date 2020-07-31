@@ -100,6 +100,7 @@ def render_scene_entrypoint(scene_files, keypath_overrides, scene_paths,
                             num_jobs, render_movie_to_file,
                             force_offscreen_rendering, **kwargs):
     from gwpv.scene_configuration.load import load_scene
+    from gwpv.download_data import download_data
 
     # Validate options
     assert (
@@ -111,6 +112,9 @@ def render_scene_entrypoint(scene_files, keypath_overrides, scene_paths,
 
     # Load scene configuration file
     scene = load_scene(scene_files, keypath_overrides, paths=scene_paths)
+
+    # Download data files
+    download_data(scene['Datasources'])
 
     if num_jobs == 1:
         render_frames(scene=scene, **kwargs)
@@ -182,7 +186,9 @@ def render_waveform_entrypoint(scene_files, keypath_overrides, scene_paths,
                                **kwargs):
     from gwpv.render.waveform import render_waveform
     from gwpv.scene_configuration.load import load_scene
+    from gwpv.download_data import download_data
     scene = load_scene(scene_files, keypath_overrides, paths=scene_paths)
+    download_data(scene['Datasources'])
     render_waveform(scene, **kwargs)
 
 
