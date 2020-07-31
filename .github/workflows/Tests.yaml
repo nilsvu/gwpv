@@ -4,16 +4,39 @@ name: Tests
 on: push
 
 jobs:
+  # These container builds don't pull caches from the Docker registry, so they
+  # are very slow. Disabling them for now.
+  # dev-container:
+  #   name: Deploy dev-container
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: docker/build-push-action@v1
+  #       with:
+  #         dockerfile: containers/Dockerfile
+  #         target: dev
+  #         username: ${{ secrets.DOCKER_USERNAME }}
+  #         password: ${{ secrets.DOCKER_PASSWORD }}
+  #         repository: nilsleiffischer/gwpv
+  #         # This would tag the container 'latest', not taking the build target
+  #         # into account. So we tag the container 'latest-dev' manually, but
+  #         # note that the container will be overridden by pushes to other
+  #         # branches.
+  #         # See: https://github.com/docker/build-push-action/issues/83
+  #         # tag_with_ref: true
+  #         tags: latest-dev
+  #         always_pull: true
+  #         cache_froms: nilsleiffischer/gwpv:latest-dev
   tests:
     name: Tests
     runs-on: ubuntu-latest
+    # needs: dev-container
     container: nilsleiffischer/gwpv:latest-dev
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
       - name: Setup Python package
         run: |
-          pip install -e .
+          pip install .
       - name: Run unit tests
         run: |
           python -m unittest discover -s tests
@@ -43,3 +66,18 @@ jobs:
       #   run: >
       #     gwrender.py waveform ../Examples/Rainbow/Rainbow.yaml
       #     --time-merger 5064 --mass 150 -p ./ -o ./dist -v
+  # deploy-container:
+  #   name: Deploy container
+  #   needs: tests
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: docker/build-push-action@v1
+  #       with:
+  #         dockerfile: containers/Dockerfile
+  #         username: ${{ secrets.DOCKER_USERNAME }}
+  #         password: ${{ secrets.DOCKER_PASSWORD }}
+  #         repository: nilsleiffischer/gwpv
+  #         tag_with_ref: true
+  #         cache_froms: nilsleiffischer/gwpv:latest-dev,nilsleiffischer/gwpv:latest
+  #         always_pull: true
