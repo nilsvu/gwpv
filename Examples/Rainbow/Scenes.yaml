@@ -3,3 +3,6 @@ Scenes:
   - Name: Rainbow
     Composition:
       - Rainbow
+  - Name: Still
+    Composition:
+      - Still

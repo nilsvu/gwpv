@@ -1,4 +1,3 @@
-# Scene.yaml
 
 Include:
   - Datasources
@@ -6,32 +5,27 @@ Include:
   - Resolutions/Low
 
 Animation:
-  Crop: [1000, 4000]
-  Speed: 300
+  Speed: 100
+  Crop: [2100, 2200]
 
 WaveformToVolume:
-  Size: 120
-  RadialScale: 8
+  Size: 100
+  RadialScale: 2.
+  Polarizations: ["Plus"]
 
 VolumeRepresentation:
-  ColorBy: Cross strain
+  ColorBy: Plus strain
   ScalarOpacityUnitDistance: 4.
 
 TransferFunctions:
-  - Field: Cross strain
+  - Field: Plus strain
     TransferFunction:
       Peaks:
-        NumPeaks: 10
-        FirstPeak:
-          Position: 0.017
-          Opacity: 0.03
-        LastPeak:
-          Position: 0.6
-          Opacity: 1.
         Colormap: Rainbow Uniform
-
-CameraShots:
-  - Position: [-215.,  155., 0.]
-    ViewUp: [0., 0., 1.]
-    FocalPoint: [0., 0., 0.]
-    ViewAngle: 60.
+        NumPeaks: 7  # A rainbow has 7 colors. No more, no less.
+        FirstPeak:
+          Position: 0.03
+          Opacity: 0.1
+        LastPeak:
+          Position: 0.06
+          Opacity: 0.5
