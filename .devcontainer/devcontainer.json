@@ -1,0 +1,12 @@
+{
+	"name": "gwpv",
+	"context": "..",
+	"dockerFile": "../containers/Dockerfile",
+	"build": {
+		"target": "dev",
+	},
+	"postCreateCommand": "pip install .",
+	"settings": { 
+	},
+	"extensions": []
+}
