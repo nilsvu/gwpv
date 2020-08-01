@@ -100,9 +100,12 @@ to make your scene configuration files and data available in the container (see
    pip install [-e] path/to/this/repository
    ```
    Note that the `HDF5_DIR` should have `include` and `lib` directories with
-   ParaView's HDF5. Add the `-e` flag when installing this repository's
-   Python package to install it in "editable" mode, i.e. symlink instead of copy
-   it so changes to the repository are reflected in the installation.
+   ParaView's HDF5. On macOS it is typically
+   `/Applications/ParaView-X.Y.Z.app/Contents/`.  Add the `-e` flag when
+   installing this repository's Python package to install it in "editable" mode,
+   i.e. symlink instead of copy it so changes to the repository are reflected in
+   the installation. On Python 2, `pip install llvmlite==0.31.0` manually
+   because later versions drop support for Python 2.
 
 ## Usage
 
@@ -110,9 +113,8 @@ to make your scene configuration files and data available in the container (see
 
 1. We need to make ParaView aware of our Python environment and the plugins in
    this repository. This is easiest done from the command line. Before launching
-   the ParaView GUI, make sure the Python environment is activated and the
-   `PYTHONPATH` is set as described in the section above. Then launch ParaView
-   like this:
+   the ParaView GUI, make sure the Python environment is activated as described
+   in the section above. Then launch ParaView like this:
    ```sh
    PV_PLUGIN_PATH=path/to/paraview_plugins path/to/paraview
    ```
