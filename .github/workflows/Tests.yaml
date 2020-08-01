@@ -60,23 +60,24 @@ jobs:
       #   run: >
       #     gwrender.py waveform $GITHUB_WORKSPACE/Examples/Rainbow/Rainbow.yaml
       #     --time-merger 5064 --mass 150 -o ./ -v
-  # deploy-container:
-  #   name: Deploy container
-  #   needs: tests
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: docker/build-push-action@v1
-  #       with:
-  #         dockerfile: containers/Dockerfile
-  #         username: ${{ secrets.DOCKER_USERNAME }}
-  #         password: ${{ secrets.DOCKER_PASSWORD }}
-  #         repository: nilsleiffischer/gwpv
-  #         tag_with_ref: true
-  #         cache_froms: nilsleiffischer/gwpv:latest-dev,nilsleiffischer/gwpv:latest
-  #         always_pull: true
+  deploy-container:
+    name: Deploy container
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: docker/build-push-action@v1
+        with:
+          dockerfile: containers/Dockerfile
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: nilsleiffischer/gwpv
+          tag_with_ref: true
+          cache_froms: nilsleiffischer/gwpv:latest-dev,nilsleiffischer/gwpv:latest
+          always_pull: true
   examples:
     name: Examples
+    needs: deploy-container
     runs-on: ubuntu-latest
     steps:
       # Note that the container must run as the user `root` to be able to write
