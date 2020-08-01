@@ -25,7 +25,7 @@ pv._DisableFirstRenderCameraReset()
 # attempt using ParaView-internal functions:
 # WaveformDataReader = pv._create_func("WaveformDataReader", pvserver.sources)
 # WaveformToVolume = pv._create_func("WaveformToVolume", pvserver.filters)
-logger.info("Loading plugins...")
+logger.info("Loading ParaView plugins...")
 plugins_dir = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
     'paraview_plugins')
@@ -44,7 +44,7 @@ pv.LoadPlugin(os.path.join(plugins_dir, 'FollowTrajectory.py'),
 pv.LoadPlugin(os.path.join(plugins_dir, 'TrajectoryTail.py'),
               remote=False,
               ns=globals())
-logger.info("Plugins loaded.")
+logger.info("ParaView plugins loaded.")
 
 
 def render_frames(scene,

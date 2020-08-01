@@ -5,10 +5,8 @@
 # from WaveformDataReader import WaveformDataReader
 
 import numpy as np
-import os
 import logging
 import time
-import hashlib
 from vtkmodules.vtkCommonDataModel import vtkUniformGrid
 from vtkmodules.vtkCommonCore import vtkDataArraySelection
 from vtkmodules.util.vtkAlgorithm import VTKPythonAlgorithmBase
@@ -18,6 +16,7 @@ from paraview import util
 from paraview.vtk.util import numpy_support as vtknp
 import gwpv.plugin_util.timesteps as timesteps_util
 import gwpv.plugin_util.data_array_selection as das_util
+from gwpv import swsh_cache
 
 logger = logging.getLogger(__name__)
 
@@ -51,68 +50,26 @@ def deactivation(x, width, outer):
 _cached_swsh_grid = None
 _cached_r = None
 _cached_grid_id = None
-def cached_swsh_grid(D,
-                     N,
-                     spin_weight,
-                     ell_max,
-                     radial_scale,
-                     clip_y_normal,
-                     clip_z_normal,
-                     activation_offset,
-                     activation_width,
-                     deactivation_width,
-                     add_one_over_r_scaling,
-                     cache_dir=None):
+def cached_swsh_grid(size, radial_scale, activation_offset, activation_width, deactivation_width, add_one_over_r_scaling, **swsh_grid_kwargs):
     global _cached_swsh_grid, _cached_r, _cached_grid_id
-    grid_id = (D, N, spin_weight, ell_max, radial_scale, clip_y_normal,
-               clip_z_normal, activation_offset, activation_width,
-               deactivation_width)
+    grid_id = dict(size=size,
+                   radial_scale=radial_scale,
+                   activation_offset=activation_offset,
+                   activation_width=activation_width,
+                   deactivation_width=deactivation_width,
+                   add_one_over_r_scaling=add_one_over_r_scaling)
+    grid_id.update(swsh_grid_kwargs)
     if _cached_grid_id == grid_id:
-        logger.debug("Using cached SWSHs grid.")
+        logger.debug("Using cached SWSHs grid from memory.")
         return _cached_swsh_grid, _cached_r
     else:
-        X = np.linspace(-D, D, N)
-        Y = np.linspace(-D, 0, N // 2) if clip_y_normal else X
-        Z = np.linspace(-D, 0, N // 2) if clip_z_normal else X
-        x, y, z = map(lambda arr: arr.flatten(order='F'), np.meshgrid(X, Y, Z, indexing='ij'))
-        r = np.sqrt(x**2 + y**2 + z**2)
-        swsh_grid = None
-        if cache_dir:
-            swsh_grid_id = (D, N, spin_weight, ell_max, clip_y_normal, clip_z_normal)
-            # Create a somewhat unique filename
-            swsh_grid_hash = int(hashlib.md5(repr(swsh_grid_id).encode('utf-8')).hexdigest(), 16) % 10**8
-            swsh_grid_cache_file = os.path.join(
-                cache_dir, ('swsh_grid_D{}_N{}_'.format(D, N) +
-                            str(swsh_grid_hash) + '.npy'))
-            if os.path.exists(swsh_grid_cache_file):
-                logger.debug(
-                    "Loading cached SWSH grid from file '{}'...".format(
-                        swsh_grid_cache_file))
-                swsh_grid = np.load(swsh_grid_cache_file)
-        if swsh_grid is None:
-            logger.info("No cached SWSH grid found, computing now...")
-            logger.info("Loading spherical_functions module (compiling SWSHs with numba)...")
-            import spherical_functions as sf
-            import quaternion as qt
-            logger.info("Spherical_functions module loaded.")
-            start_time = time.time()
-            th = np.arccos(z / r)
-            phi = np.arctan2(y, x)
-            angles = qt.from_spherical_coords(th, phi)
-            swsh_grid = sf.SWSH_grid(angles, s=spin_weight, ell_max=ell_max)
-            logger.info("SWSH grid computed in {:.3f}s.".format(time.time() -
-                                                                start_time))
-            if cache_dir:
-                if not os.path.exists(cache_dir):
-                    os.makedirs(cache_dir)
-                if not os.path.exists(swsh_grid_cache_file):
-                    np.save(swsh_grid_cache_file, swsh_grid)
-                    logger.debug("SWSH grid cache saved to file '{}'.".format(
-                        swsh_grid_cache_file))
+        logger.debug("No SWSH grid in memory, retrieving from disk cache.")
+        swsh_grid, r = swsh_cache.cached_swsh_grid(size=size,
+                                                   **swsh_grid_kwargs)
         # Apply screening
         screen = activation(r - activation_offset,
                             activation_width) * deactivation(
-                                r, deactivation_width, D)
+                                r, deactivation_width, size)
         swsh_grid *= screen.reshape(screen.shape + (1, ))
         # Apply radial scale
         r *= radial_scale
@@ -342,8 +299,8 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         spin_weight = -2
         ell_max = self.ell_max
         swsh_grid, r = cached_swsh_grid(
-            D=D,
-            N=N,
+            size=D,
+            num_points=N,
             spin_weight=spin_weight,
             ell_max=ell_max,
             radial_scale=self.radial_scale,

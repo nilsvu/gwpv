@@ -101,6 +101,7 @@ def render_scene_entrypoint(scene_files, keypath_overrides, scene_paths,
                             force_offscreen_rendering, **kwargs):
     from gwpv.scene_configuration.load import load_scene
     from gwpv.download_data import download_data
+    from gwpv.swsh_cache import precompute_cached_swsh_grid
 
     # Validate options
     assert (
@@ -115,6 +116,9 @@ def render_scene_entrypoint(scene_files, keypath_overrides, scene_paths,
 
     # Download data files
     download_data(scene['Datasources'])
+
+    # Cache SWSH grid
+    precompute_cached_swsh_grid(scene)
 
     if num_jobs == 1:
         render_frames(scene=scene, **kwargs)
