@@ -254,42 +254,61 @@ Here's a few images and movies produces with this software package:
 
 ### GW190412
 
-[![GW190412 PanoramaLargeScaleNoTail_frame.000023](https://www.aei.mpg.de/2490709/original-1587376764.png?t=eyJ3aWR0aCI6ODAwLCJoZWlnaHQiOjYwMCwib2JqX2lkIjoyNDkwNzA5fQ==--a38cd313aa655bd3990f4172ade0a414a3729a1a)](https://dcc.ligo.org/DocDB/0167/G2000575/005/PanoramaLargeScaleNoTail_frame.000023_watermarked.png)
+[![GW190412 PanoramaLargeScaleNoTail_frame.000023](https://www.aei.mpg.de/229598/original-1587395660.png?t=eyJ3aWR0aCI6MTQwMCwib2JqX2lkIjoyMjk1OTh9--c43e32c8946e424f9950b4ca0f1df58b424e9884)](https://dcc.ligo.org/DocDB/0167/G2000575/005/PanoramaLargeScaleNoTail_frame.000023_watermarked.png)
 
-[![GW190412 CloseupSlowdownWithSpins_frame.000003](https://www.aei.mpg.de/2495564/original-1587376766.png?t=eyJ3aWR0aCI6ODAwLCJoZWlnaHQiOjYwMCwib2JqX2lkIjoyNDk1NTY0fQ==--0d65e7118cefc0b8b3f6e89308b7e252b601593e)](https://dcc.ligo.org/DocDB/0167/G2000575/005/CloseupSlowdownWithSpins_frame.000003_watermarked.png)
+[![GW190412 CloseupSlowdownWithSpins_frame.000003](https://www.aei.mpg.de/227024/original-1587395661.png?t=eyJ3aWR0aCI6MTQwMCwib2JqX2lkIjoyMjcwMjR9--2aad389c7518bc288cef2141587081206765751f)](https://dcc.ligo.org/DocDB/0167/G2000575/005/CloseupSlowdownWithSpins_frame.000003_watermarked.png)
 
-[![GW190412 FaceOnMerger](https://www.aei.mpg.de/2491271/original-1587376765.png?t=eyJ3aWR0aCI6ODAwLCJoZWlnaHQiOjYwMCwib2JqX2lkIjoyNDkxMjcxfQ==--4c1703f7d733854bbf740439a1dba0da9247d4b5)](https://dcc.ligo.org/public/0167/G2000575/005/FaceOnMerger_frame_watermarked.png)
+[![GW190412 FaceOnMerger](https://www.aei.mpg.de/227073/original-1587395661.png?t=eyJ3aWR0aCI6MTQwMCwib2JqX2lkIjoyMjcwNzN9--45aa9ab2a4999dd95f6ee31c64e7ddc7d58a5d04)](https://dcc.ligo.org/public/0167/G2000575/005/FaceOnMerger_frame_watermarked.png)
 
-- More information and images available at: https://www.aei.mpg.de/2482853/gw190412 and https://dcc.ligo.org/LIGO-G2000575/public
+- Source: [nilsleiffischer/gw190412-movie](https://github.com/nilsleiffischer/gw190412-movie)
+- More information and images available at: https://www.aei.mpg.de/214403/gw190412-binary-black-hole-merger and https://dcc.ligo.org/LIGO-G2000575/public
 - Video:
 
   [![GW190412 video](http://img.youtube.com/vi/5AkT4bPk-00/0.jpg)](http://www.youtube.com/watch?v=5AkT4bPk-00)
 - Selected media coverage:
   - https://www.nature.com/articles/d41586-020-01153-7
   - https://www.sciencenews.org/article/gravitational-waves-unevenly-sized-black-holes-ligo-virgo
-  - https://www.aei.mpg.de/2482444/a-signal-like-none-before
+  - https://www.aei.mpg.de/213678/a-signal-like-none-before
   - https://www.ligo.org/detections/GW190412
   - https://www.ligo.caltech.edu/news/ligo20200420
   - https://www.spektrum.de/news/neuartiges-gravitationswellensignal/1725506
 
 ### GW190814
 
-[![GW190814 MergerFaceOnAllModes](https://www.aei.mpg.de/2513085/original-1592920551.png?t=eyJ3aWR0aCI6ODAwLCJoZWlnaHQiOjYwMCwib2JqX2lkIjoyNTEzMDg1fQ==--8d9006ed5e85c48a6fa5554b589df5e64d2b2708)](https://dcc.ligo.org/DocDB/0168/G2000730/003/MergerFaceOnAllModes_frame_watermarked.png)
+[![GW190814 MergerFaceOnAllModes](https://www.aei.mpg.de/267651/original-1591184221.jpg?t=eyJ3aWR0aCI6MTQwMCwib2JqX2lkIjoyNjc2NTF9--a275507a540dc3fc91c6b82fcce09bdb86bf1f3c)](https://dcc.ligo.org/DocDB/0168/G2000730/003/MergerFaceOnAllModes_frame_watermarked.png)
 
-[![GW190814 PanoramaModesCompositionFaceOn_frame.000003](https://www.aei.mpg.de/2514336/original-1592920549.png?t=eyJ3aWR0aCI6ODAwLCJoZWlnaHQiOjYwMCwib2JqX2lkIjoyNTE0MzM2fQ==--c443f111f62a5f474943efd100a109a33a52f7df)](https://dcc.ligo.org/DocDB/0168/G2000730/003/PanoramaModesCompositionFaceOn_frame.000003_watermarked.png)
+[![GW190814 PanoramaModesCompositionFaceOn_frame.000003](https://www.aei.mpg.de/267979/original-1591184220.jpg?t=eyJ3aWR0aCI6MTQwMCwib2JqX2lkIjoyNjc5Nzl9--020fdd8d0e87b8963ec815628a00772e17101f50)](https://dcc.ligo.org/DocDB/0168/G2000730/003/PanoramaModesCompositionFaceOn_frame.000003_watermarked.png)
 
-[![GW190814 PanoramaAllModesFaceOn_frame.000006](https://www.aei.mpg.de/2513506/original-1592920551.png?t=eyJ3aWR0aCI6ODAwLCJoZWlnaHQiOjYwMCwib2JqX2lkIjoyNTEzNTA2fQ==--6d792b86639fcb318352d55d43b429c578363de1)](https://dcc.ligo.org/DocDB/0168/G2000730/003/PanoramaAllModesFaceOn_frame.000006_watermarked.png)
+[![GW190814 PanoramaAllModesFaceOn_frame.000006](https://www.aei.mpg.de/267796/original-1591184221.jpg?t=eyJ3aWR0aCI6MTQwMCwib2JqX2lkIjoyNjc3OTZ9--69dbd93a412c6aa07f6949dfcad5a0545daff82b)](https://dcc.ligo.org/DocDB/0168/G2000730/003/PanoramaAllModesFaceOn_frame.000006_watermarked.png)
 
-- More information and images available at: https://www.aei.mpg.de/2509258/gw190814 and https://dcc.ligo.org/LIGO-G2000730/public
+- Source: [nilsleiffischer/gw190814-movie](https://github.com/nilsleiffischer/gw190814-movie)
+- More information and images available at: https://www.aei.mpg.de/263744/gw190814 and https://dcc.ligo.org/LIGO-G2000730/public
 - Video:
 
   [![GW190814 video](http://img.youtube.com/vi/p4xHz-If6kw/0.jpg)](http://www.youtube.com/watch?v=p4xHz-If6kw)
 
 - Selected media coverage:
-  - https://www.aei.mpg.de/2508194/a-black-hole-with-a-puzzling-companion
+  - https://www.aei.mpg.de/267070/a-black-hole-with-a-puzzling-companion
   - https://www.ligo.org/detections/GW190814
   - https://www.space.com/smallest-black-hole-biggest-neutron-stary-mystery-object.html
   - https://www.dailymail.co.uk/sciencetech/article-8451939/Mysterious-cosmic-object-lighter-black-hole-heavier-neutron-star-discovered.html
+
+### GW190521
+
+[![GW190521 FaceOn.000003](https://www.aei.mpg.de/501587/original-1599048019.jpg?t=eyJ3aWR0aCI6MTQwMCwib2JqX2lkIjo1MDE1ODd9--8fbdb839eeafee785e0c9a32fdf13ba1dfec3cef)](https://dcc.ligo.org/public/0169/G2001282/001/FaceOn_frame.000003_watermarked.png)
+
+[![GW190521 Serene](https://www.aei.mpg.de/501695/original-1599048019.jpg?t=eyJ3aWR0aCI6MTQwMCwib2JqX2lkIjo1MDE2OTV9--f9bb06569d1376477a9318d80930e8912c9568b1)](https://dcc.ligo.org/public/0169/G2001282/001/Serene_frame.000003_watermarked.png)
+
+- Source: [nilsleiffischer/gw190521-movie](https://github.com/nilsleiffischer/gw190521-movie)
+- More information and images available at: https://www.aei.mpg.de/500856/gw190521 and https://dcc.ligo.org/LIGO-G2001282/public
+- Video:
+
+  [![GW190521 video](http://img.youtube.com/vi/zRmwtL6lvIM/0.jpg)](http://www.youtube.com/watch?v=zRmwtL6lvIM)
+- Selected media coverage:
+  - https://www.aei.mpg.de/296843/ligo-and-virgo-catch-their-biggest-fish-so-far
+  - https://www.ligo.caltech.edu/news/ligo20200902
+  - https://aasnova.org/2020/09/02/ligo-virgos-newest-merger/
+
 
 ## Licensing and credits
 
