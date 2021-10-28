@@ -17,6 +17,7 @@ from paraview.vtk.util import numpy_support as vtknp
 import gwpv.plugin_util.timesteps as timesteps_util
 import gwpv.plugin_util.data_array_selection as das_util
 from gwpv import swsh_cache
+from gwpv import generatee
 
 logger = logging.getLogger(__name__)
 
@@ -363,7 +364,8 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
                 for sign_m in (-1, 1):
                     m = abs_m * sign_m
                     dataset_name = "Y_l{}_m{}".format(l, m)
-                    mode_profile = swsh_grid[:, LM_index(l, m, 0)]
+                    mode_profile = generatee.generate_analytic(D, N) # use the imported analytical form here
+                    # mode_profile = swsh_grid[:, LM_index(l, m, 0)]
                     # mode_profile = vtknp.vtk_to_numpy(grid_data.GetPointData()[dataset_name])
                     waveform_mode_data = waveform_data.RowData[dataset_name][::skip_timesteps]
                     if isinstance(waveform_mode_data, dsa.VTKNoneArray):
@@ -378,13 +380,14 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
                         waveform_mode_data /= np.max(np.abs(waveform_mode_data))
                     if waveform_uniformly_sampled:
                         waveform_mode_data = waveform_mode_data[waveform_start_index:waveform_stop_index]
-                    mode_data = np.interp(phase,
-                                          waveform_timesteps,
-                                          waveform_mode_data,
-                                          left=0.,
-                                          right=0.)
+                    #mode_data = np.interp(phase,
+                    #                      waveform_timesteps,
+                    #                      waveform_mode_data,
+                    #                      left=0.,
+                    #                      right=0.)
+                    mode_data = np.cos(phase * 0.01) #hier können beliebige abhängigkeiten von phase erzeugt werden
                     strain_mode += mode_data * mode_profile
-                strain += strain_mode
+                strain += strain_mode # hier wird immer wieder dasselbe aufsummiert
                 # Expose individual modes in output
                 if self.store_individual_modes:
                     if self.polarizations_selection.ArrayIsEnabled("Plus"):
