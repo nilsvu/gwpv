@@ -1,5 +1,5 @@
 # Waveform data ParaView reader
-
+import numpy as np
 import h5py
 import logging
 import time
@@ -50,7 +50,32 @@ class WaveformDataReader(VTKPythonAlgorithmBase):
         # Add the modes provided by the data file to the information that
         # propagates down the pipeline. This allows subsequent filters to select
         # a subset of modes to display, for example.
-        if self._filename is not None and self._subfile is not None:
+
+        # check if analytical data was given
+        if self._filename[-12:] == "analytics.h5":
+
+            with h5py.File(self._filename, 'r') as f:
+                self.mode_names = list(
+                    map(
+                        lambda dataset_name: dataset_name.replace('.dat', ''),
+                        filter(
+                            lambda dataset_name: dataset_name.startswith(
+                                'Y_'), f[self._subfile].keys())))
+            if len(self.mode_names) == 0:
+                logger.warning(
+                    "No waveform mode datasets (prefixed 'Y_') found in file '{}'."
+                    .format(self._filename + ':' + 'self._subfile'))
+            logger.debug("Set MODE_ARRAYS: {}".format(self.mode_names))
+            info.Remove(WaveformDataReader.WAVEFORM_MODES_KEY)
+            for mode_name in self.mode_names:
+                info.Append(WaveformDataReader.WAVEFORM_MODES_KEY, mode_name)
+            # Make the `WAVEFORM_MODES` propagate downstream.
+            # TODO: This doesn't seem to be working...
+            request.AppendUnique(self.GetExecutive().KEYS_TO_COPY(),
+                                 WaveformDataReader.WAVEFORM_MODES_KEY)
+
+        elif self._filename is not None and self._subfile is not None:
+
             with h5py.File(self._filename, 'r') as f:
                 self.mode_names = list(
                     map(
@@ -78,9 +103,33 @@ class WaveformDataReader(VTKPythonAlgorithmBase):
         start_time = time.time()
 
         output = dsa.WrapDataObject(vtkTable.GetData(outInfo))
+        logger.warning(self._filename)
 
-        if self._filename is not None and self._subfile is not None and len(
+        # check if analytical data was given
+        if self._filename[-12:] == "analytics.h5":
+
+            with h5py.File(self._filename, 'r') as f:
+                strain = f[self._subfile]
+                t = np.real(strain['analytics'][1:, 0])
+                col_time = vtknp.numpy_to_vtk(t, deep=False)
+                col_time.SetName('Time')
+                output.AddColumn(col_time)
+
+                for i in range(1000):
+                    col_mode = vtknp.numpy_to_vtk(np.real(strain['analytics'][1:, i]),
+                                                  deep=False)
+                    col_mode.SetName('R Theta = '+str(i) + 'Phi = '+str(i))
+                    output.AddColumn(col_mode)
+
+                for i in range(1000):
+                    col_mode = vtknp.numpy_to_vtk(np.imag(strain['analytics'][1:, i]),
+                                                  deep=False)
+                    col_mode.SetName('Im Theta = '+str(i) + 'Phi = '+str(i))
+                    output.AddColumn(col_mode)
+
+        elif self._filename is not None and self._subfile is not None and len(
                 self.mode_names) > 0:
+
             with h5py.File(self._filename, 'r') as f:
                 strain = f[self._subfile]
                 t = strain['Y_l2_m2.dat'][:, 0]
