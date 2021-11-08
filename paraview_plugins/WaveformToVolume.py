@@ -17,7 +17,6 @@ from paraview.vtk.util import numpy_support as vtknp
 import gwpv.plugin_util.timesteps as timesteps_util
 import gwpv.plugin_util.data_array_selection as das_util
 from gwpv import swsh_cache
-from gwpv import generatee
 
 logger = logging.getLogger(__name__)
 
@@ -329,77 +328,88 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         strain = np.zeros(len(r), dtype=np.complex)
         # Optimization for when the waveform is sampled uniformly
         # TODO: Cache this
-        dt = np.diff(waveform_timesteps)
-        waveform_uniformly_sampled = np.allclose(dt, dt[0])
-        global has_shown_warning_nonuniformly_sampled
-        if waveform_uniformly_sampled:
-            dt = dt[0]
-            logger.debug("Waveform sampled uniformly with dt={:.2e}, using optimized interpolation:".format(dt))
-            waveform_start_time = waveform_timesteps[0]
-            waveform_start_index = min(len(waveform_timesteps) - 2, max(
-                0, int(np.floor((np.min(phase) - waveform_start_time) / dt))))
-            waveform_stop_index = max(waveform_start_index + 1, min(
-                len(waveform_timesteps),
-                int(np.ceil((np.max(phase) - waveform_start_time) / dt))))
-            if waveform_stop_index == len(waveform_timesteps):
-                waveform_stop_index = -1
-            logger.debug(
-                "Restricting interpolation to waveform indices {}, that's between waveform times {}. We will interpolate to times between {} (should be contained in restricted waveform range except for boundary effects)."
-                .format((waveform_start_index, waveform_stop_index),
-                        (waveform_timesteps[waveform_start_index],
-                         waveform_timesteps[waveform_stop_index]),
-                        (np.min(phase), np.max(phase))))
-            waveform_timesteps = waveform_timesteps[waveform_start_index:waveform_stop_index]
-        elif not has_shown_warning_nonuniformly_sampled:
-            logger.warning("Waveform is not sampled uniformly so interpolation is slightly more expensive.")
-            has_shown_warning_nonuniformly_sampled = True
-        # for i in range(self.modes_selection.GetNumberOfArrays()):
-        #     mode_name = self.modes_selection.GetArrayName(i)
-        for l in range(abs(spin_weight), ell_max + 1):
-            for abs_m in range(0, l + 1):
-                mode_name = get_mode_name(l, abs_m)
-                strain_mode = np.zeros(len(r), dtype=np.complex)
-                if not self.modes_selection.ArrayIsEnabled(mode_name):
-                    continue
-                for sign_m in (-1, 1):
-                    m = abs_m * sign_m
-                    dataset_name = "Y_l{}_m{}".format(l, m)
-                    mode_profile = generatee.generate_analytic(D, N) # use the imported analytical form here
-                    # mode_profile = swsh_grid[:, LM_index(l, m, 0)]
-                    # mode_profile = vtknp.vtk_to_numpy(grid_data.GetPointData()[dataset_name])
-                    waveform_mode_data = waveform_data.RowData[dataset_name][::skip_timesteps]
-                    if isinstance(waveform_mode_data, dsa.VTKNoneArray):
-                        logger.warning(
-                            "Dataset '{}' for mode {} not available in waveform data, skipping."
-                            .format(dataset_name, (l, m)))
+        
+        # Here the analytical data gets recognized, by checking if the given data is simulation-data,
+        # if not the program treats the data as analytical  created with creator.py
+        if type(waveform_data.RowData['Y_l2_m2'][5]) is dsa.VTKNoneArray:
+
+            indexx = list(map(abs, list(waveform_timesteps - t))).index(
+                np.min(list(map(abs, list(waveform_timesteps - t)))))
+            for i in range(1000):
+                strain[i] = waveform_data.RowData['R Theta = ' + str(i) + 'Phi = ' + str(i)][indexx] + 1j * \
+                            waveform_data.RowData['Im Theta = ' + str(i) + 'Phi = ' + str(i)][indexx]
+        else:
+
+
+            dt = np.diff(waveform_timesteps)
+            waveform_uniformly_sampled = np.allclose(dt, dt[0])
+            global has_shown_warning_nonuniformly_sampled
+            if waveform_uniformly_sampled:
+                dt = dt[0]
+                logger.debug("Waveform sampled uniformly with dt={:.2e}, using optimized interpolation:".format(dt))
+                waveform_start_time = waveform_timesteps[0]
+                waveform_start_index = min(len(waveform_timesteps) - 2, max(
+                    0, int(np.floor((np.min(phase) - waveform_start_time) / dt))))
+                waveform_stop_index = max(waveform_start_index + 1, min(
+                    len(waveform_timesteps),
+                    int(np.ceil((np.max(phase) - waveform_start_time) / dt))))
+                if waveform_stop_index == len(waveform_timesteps):
+                    waveform_stop_index = -1
+                logger.debug(
+                    "Restricting interpolation to waveform indices {}, that's between waveform times {}. We will interpolate to times between {} (should be contained in restricted waveform range except for boundary effects)."
+                    .format((waveform_start_index, waveform_stop_index),
+                            (waveform_timesteps[waveform_start_index],
+                             waveform_timesteps[waveform_stop_index]),
+                            (np.min(phase), np.max(phase))))
+                waveform_timesteps = waveform_timesteps[waveform_start_index:waveform_stop_index]
+            elif not has_shown_warning_nonuniformly_sampled:
+                logger.warning("Waveform is not sampled uniformly so interpolation is slightly more expensive.")
+                has_shown_warning_nonuniformly_sampled = True
+            # for i in range(self.modes_selection.GetNumberOfArrays()):
+            #     mode_name = self.modes_selection.GetArrayName(i)
+            for l in range(abs(spin_weight), ell_max + 1):
+                for abs_m in range(0, l + 1):
+                    mode_name = get_mode_name(l, abs_m)
+                    strain_mode = np.zeros(len(r), dtype=np.complex)
+                    if not self.modes_selection.ArrayIsEnabled(mode_name):
                         continue
-                    # TODO: Make sure inverting the rotation direction like this
-                    # is correct.
-                    waveform_mode_data = waveform_mode_data[:, 0] + rotation_direction * 1j * waveform_mode_data[:, 1]
-                    if self.normalize_each_mode:
-                        waveform_mode_data /= np.max(np.abs(waveform_mode_data))
-                    if waveform_uniformly_sampled:
-                        waveform_mode_data = waveform_mode_data[waveform_start_index:waveform_stop_index]
-                    #mode_data = np.interp(phase,
-                    #                      waveform_timesteps,
-                    #                      waveform_mode_data,
-                    #                      left=0.,
-                    #                      right=0.)
-                    mode_data = np.cos(phase * 0.01) #hier können beliebige abhängigkeiten von phase erzeugt werden
-                    strain_mode += mode_data * mode_profile
-                strain += strain_mode # hier wird immer wieder dasselbe aufsummiert
-                # Expose individual modes in output
-                if self.store_individual_modes:
-                    if self.polarizations_selection.ArrayIsEnabled("Plus"):
-                        strain_mode_real_vtk = vtknp.numpy_to_vtk(
-                            np.real(strain_mode), deep=True)
-                        strain_mode_real_vtk.SetName(mode_name + ' Plus')
-                        output.GetPointData().AddArray(strain_mode_real_vtk)
-                    if self.polarizations_selection.ArrayIsEnabled("Cross"):
-                        strain_mode_imag_vtk = vtknp.numpy_to_vtk(
-                            np.imag(strain_mode), deep=True)
-                        strain_mode_imag_vtk.SetName(mode_name + ' Cross')
-                        output.GetPointData().AddArray(strain_mode_imag_vtk)
+                    for sign_m in (-1, 1):
+                        m = abs_m * sign_m
+                        dataset_name = "Y_l{}_m{}".format(l, m)
+                        mode_profile = swsh_grid[:, LM_index(l, m, 0)]
+                        # mode_profile = vtknp.vtk_to_numpy(grid_data.GetPointData()[dataset_name])
+                        waveform_mode_data = waveform_data.RowData[dataset_name][::skip_timesteps]
+                        if isinstance(waveform_mode_data, dsa.VTKNoneArray):
+                            logger.warning(
+                                "Dataset '{}' for mode {} not available in waveform data, skipping."
+                                .format(dataset_name, (l, m)))
+                            continue
+                        # TODO: Make sure inverting the rotation direction like this
+                        # is correct.
+                        waveform_mode_data = waveform_mode_data[:, 0] + rotation_direction * 1j * waveform_mode_data[:, 1]
+                        if self.normalize_each_mode:
+                            waveform_mode_data /= np.max(np.abs(waveform_mode_data))
+                        if waveform_uniformly_sampled:
+                            waveform_mode_data = waveform_mode_data[waveform_start_index:waveform_stop_index]
+                        mode_data = np.interp(phase,
+                                              waveform_timesteps,
+                                              waveform_mode_data,
+                                              left=0.,
+                                              right=0.)
+                        strain_mode += mode_data * mode_profile
+                    strain += strain_mode
+                    # Expose individual modes in output
+                    if self.store_individual_modes:
+                        if self.polarizations_selection.ArrayIsEnabled("Plus"):
+                            strain_mode_real_vtk = vtknp.numpy_to_vtk(
+                                np.real(strain_mode), deep=True)
+                            strain_mode_real_vtk.SetName(mode_name + ' Plus')
+                            output.GetPointData().AddArray(strain_mode_real_vtk)
+                        if self.polarizations_selection.ArrayIsEnabled("Cross"):
+                            strain_mode_imag_vtk = vtknp.numpy_to_vtk(
+                                np.imag(strain_mode), deep=True)
+                            strain_mode_imag_vtk.SetName(mode_name + ' Cross')
+                            output.GetPointData().AddArray(strain_mode_imag_vtk)
         if self.polarizations_selection.ArrayIsEnabled("Plus"):
             strain_real_vtk = vtknp.numpy_to_vtk(np.real(strain), deep=True)
             strain_real_vtk.SetName('Plus strain')
@@ -412,3 +422,4 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         logger.info("Volume data computed in {:.3f}s.".format(time.time() -
                                                               start_time))
         return 1
+    
