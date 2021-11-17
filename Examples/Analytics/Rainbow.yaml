@@ -1,0 +1,31 @@
+
+Include:
+  - Datasources
+  - Background/Dark
+  - Resolutions/Low
+
+Animation:
+  Speed: 100
+  Crop: [2100, 2200]
+
+WaveformToVolume:
+  Size: 100
+  RadialScale: 2.
+  Polarizations: ["Plus"]
+
+VolumeRepresentation:
+  ColorBy: Plus strain
+  ScalarOpacityUnitDistance: 4.
+
+TransferFunctions:
+  - Field: Plus strain
+    TransferFunction:
+      Peaks:
+        Colormap: Rainbow Uniform
+        NumPeaks: 7  # A rainbow has 7 colors. No more, no less.
+        FirstPeak:
+          Position: 0.03
+          Opacity: 0.1
+        LastPeak:
+          Position: 0.06
+          Opacity: 0.5

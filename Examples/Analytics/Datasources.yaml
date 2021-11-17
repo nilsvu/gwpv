@@ -1,0 +1,8 @@
+
+Replace:
+  Datasources:
+    Waveform:
+      File: /home/dami/baproject/gwpv/gwpv/hier/analytics.h5
+      Subfile: Extrapolated_N2.dir
+      Cache: waveform_data_cache
+    SwshCache: swsh_cache
