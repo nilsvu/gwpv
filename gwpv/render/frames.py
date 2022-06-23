@@ -68,24 +68,35 @@ def render_frames(scene,
     layout = pv.CreateLayout('Layout')
 
     # Setup view
-    if 'BackgroundTexture' in scene['View']:
-        background_texture_config = scene['View']['BackgroundTexture']
-        del scene['View']['BackgroundTexture']
+    if 'Background' in scene['View']:
+        bg_config = scene['View']['Background']
+        del scene['View']['Background']
+        if isinstance(bg_config, list):
+            if isinstance(bg_config[0], list):
+                assert len(bg_config) == 2, (
+                    "When 'Background' is a list of colors, it must have 2 entries.")
+                bg_config = dict(BackgroundColorMode='Gradient',
+                    Background=parse_as.color(bg_config[0]),
+                    Background2=parse_as.color(bg_config[1]))
+            else:
+                bg_config = dict(BackgroundColorMode='Single Color',
+                    Background=parse_as.color(bg_config))
+            bg_config['UseColorPaletteForBackground'] = 0
+            scene['View'].update(bg_config)
+            bg_config = None
     else:
-        background_texture_config = None
+        bg_config = None
     view = pv.CreateRenderView(**scene['View'])
     pv.AssignViewToLayout(view=view, layout=layout, hint=0)
 
     # Set spherical background texture
-    if background_texture_config is not None:
-        background_radius = background_texture_config['Radius']
-        del background_texture_config['Radius']
-        skybox_datasource = background_texture_config['Datasource']
-        del background_texture_config['Datasource']
+    if bg_config is not None:
+        bg_config['BackgroundColorMode'] = 'Texture'
+        skybox_datasource = bg_config['Datasource']
+        del bg_config['Datasource']
         background_texture = pvserver.rendering.ImageTexture(
-            FileName=parse_as.path(scene['Datasources'][skybox_datasource]),
-            **background_texture_config)
-        background_sphere = pv.Sphere(Radius=background_radius,
+            FileName=parse_as.path(scene['Datasources'][skybox_datasource]))
+        background_sphere = pv.Sphere(Radius=bg_config['Radius'],
                                       ThetaResolution=100,
                                       PhiResolution=100)
         background_texture_map = pv.TextureMaptoSphere(Input=background_sphere)

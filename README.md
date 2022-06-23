@@ -52,13 +52,8 @@ to make your scene configuration files and data available in the container (see
 
 ### Option 2: Native environment
 
-> It is strongly recommended to use Python 3 for this program. In particular,
-> parallel rendering may not work with Python 2 and setting up the environment
-> with Python 3's [`venv`](https://docs.python.org/3/library/venv.html) is more
-> robust than Python 2's `virtualenv`.
-
-1. Install [ParaView](https://www.paraview.org/download/). Prefer versions
-   with Python 3. This program was tested thoroughly with ParaView version 5.8.
+1. Install [ParaView (v5.10 or above)](https://www.paraview.org/download/). Make
+   sure to install a version with Python 3.
 2. Create a [virtual environment](https://docs.python.org/3/tutorial/venv.html)
    with ParaView's Python. With Python 3 you could do this:
    ```sh
@@ -76,8 +71,9 @@ to make your scene configuration files and data available in the container (see
    On macOS the `pvpython` executable is typically located in
    `/Applications/ParaView-X.Y.Z.app/Contents/bin`. The Python executable
    determined by the script above may be named `vtkpython`, in which case you
-   can look for the `python2` or `python3` executable in the same directory or a
-   `bin` subdirectory.
+   can look for the `python3` executable in the same directory or a `bin`
+   subdirectory. If you can't find ParaView's Python executable, try using any
+   Python installation with the same version as ParaView's.
 3. Give ParaView access to the environment. If you have created the environment
    with Python 3's `venv` then copy the `scripts/activate_this.py` script to the
    environment:

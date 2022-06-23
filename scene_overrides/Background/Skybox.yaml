@@ -2,8 +2,6 @@
 
 View:
   Replace:
-    UseGradientBackground: False
-    Background: [0., 0., 0.]
-    BackgroundTexture:
+    Background:
       Datasource: Skybox
       Radius: 1000
