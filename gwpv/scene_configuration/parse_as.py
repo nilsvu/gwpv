@@ -3,6 +3,13 @@ import hashlib
 from urllib.parse import urlparse
 
 
+def color(config):
+    if isinstance(config, list) and len(config) == 3:
+        return config
+    else:
+        raise ValueError(f"Not a color: {config}")
+
+
 def path(config, relative_to='.'):
     assert isinstance(config, str), "Expected file system path but got: {}".format(config)
     if config.startswith('/'):
