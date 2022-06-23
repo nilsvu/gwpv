@@ -1,9 +1,9 @@
 
-<p align="center" id="banner"><img src="https://raw.githubusercontent.com/nilsleiffischer/gwpv/master/docs/banner.png"></p>
+<p align="center" id="banner"><img src="https://raw.githubusercontent.com/nilsvu/gwpv/develop/docs/banner.png"></p>
 
 # gwpv
 
-![Tests](https://github.com/nilsleiffischer/gwpv/workflows/Tests/badge.svg)
+![Tests](https://github.com/nilsvu/gwpv/workflows/Tests/badge.svg)
 
 This Python package uses the [ParaView](https://www.paraview.org) scientific
 visualization toolkit to produce 3D renderings of gravitational-wave data from a
@@ -260,7 +260,7 @@ Here's a few images and movies produces with this software package:
 
 [![GW190412 FaceOnMerger](https://www.aei.mpg.de/227073/original-1587395661.png?t=eyJ3aWR0aCI6MTQwMCwib2JqX2lkIjoyMjcwNzN9--45aa9ab2a4999dd95f6ee31c64e7ddc7d58a5d04)](https://dcc.ligo.org/public/0167/G2000575/005/FaceOnMerger_frame_watermarked.png)
 
-- Source: [nilsleiffischer/gw190412-movie](https://github.com/nilsleiffischer/gw190412-movie)
+- Source: [nilsvu/gw190412-movie](https://github.com/nilsvu/gw190412-movie)
 - More information and images available at: https://www.aei.mpg.de/214403/gw190412-binary-black-hole-merger and https://dcc.ligo.org/LIGO-G2000575/public
 - Video:
 
@@ -281,7 +281,7 @@ Here's a few images and movies produces with this software package:
 
 [![GW190814 PanoramaAllModesFaceOn_frame.000006](https://www.aei.mpg.de/267796/original-1591184221.jpg?t=eyJ3aWR0aCI6MTQwMCwib2JqX2lkIjoyNjc3OTZ9--69dbd93a412c6aa07f6949dfcad5a0545daff82b)](https://dcc.ligo.org/DocDB/0168/G2000730/003/PanoramaAllModesFaceOn_frame.000006_watermarked.png)
 
-- Source: [nilsleiffischer/gw190814-movie](https://github.com/nilsleiffischer/gw190814-movie)
+- Source: [nilsvu/gw190814-movie](https://github.com/nilsvu/gw190814-movie)
 - More information and images available at: https://www.aei.mpg.de/263744/gw190814 and https://dcc.ligo.org/LIGO-G2000730/public
 - Video:
 
@@ -299,7 +299,7 @@ Here's a few images and movies produces with this software package:
 
 [![GW190521 Serene](https://www.aei.mpg.de/501695/original-1599048019.jpg?t=eyJ3aWR0aCI6MTQwMCwib2JqX2lkIjo1MDE2OTV9--f9bb06569d1376477a9318d80930e8912c9568b1)](https://dcc.ligo.org/public/0169/G2001282/001/Serene_frame.000003_watermarked.png)
 
-- Source: [nilsleiffischer/gw190521-movie](https://github.com/nilsleiffischer/gw190521-movie)
+- Source: [nilsvu/gw190521-movie](https://github.com/nilsvu/gw190521-movie)
 - More information and images available at: https://www.aei.mpg.de/500856/gw190521 and https://dcc.ligo.org/LIGO-G2001282/public
 - Video:
 
@@ -315,6 +315,6 @@ Here's a few images and movies produces with this software package:
 This code is distributed under the MIT license. Please see the
 [`LICENSE`](LICENSE) for details. When you use code from this project or
 publish media produced by this code, please include a reference back to the
-[nilsleiffischer/gwpv](https://github.com/nilsleiffischer/gwpv) repository.
+[nilsvu/gwpv](https://github.com/nilsvu/gwpv) repository.
 
-Copyright (c) 2020 Nils Leif Fischer
+Copyright (c) 2020 Nils L. Vu
