@@ -39,15 +39,15 @@ def cached_swsh_grid(size,
                 "No SWSH grid file '{}' found.".format(swsh_grid_cache_file))
     if swsh_grid is None:
         logger.info("No cached SWSH grid found, computing now...")
-        logger.info("Loading spherical_functions module (compiling SWSHs with numba)...")
-        import spherical_functions as sf
-        import quaternion as qt
-        logger.info("Spherical_functions module loaded.")
+        logger.info("Loading 'spherical' module...")
+        import spherical
+        import quaternionic
+        logger.info("'spherical' module loaded.")
         start_time = time.time()
         th = np.arccos(z / r)
         phi = np.arctan2(y, x)
-        angles = qt.from_spherical_coords(th, phi)
-        swsh_grid = sf.SWSH_grid(angles, s=spin_weight, ell_max=ell_max)
+        angles = quaternionic.array.from_spherical_coordinates(th, phi)
+        swsh_grid = spherical.Wigner(ell_max).sYlm(s=spin_weight, R=angles)
         logger.info("SWSH grid computed in {:.3f}s.".format(time.time() -
                                                             start_time))
         if cache_dir:

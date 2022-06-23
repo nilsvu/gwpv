@@ -25,7 +25,7 @@ setup(
         ],
     },
     install_requires=[
-        'numpy', 'scipy', 'h5py', 'spherical_functions', 'numba', 'pyyaml',
+        'numpy', 'scipy', 'h5py', 'spherical', 'pyyaml',
         'tqdm', 'astropy', 'matplotlib', 'requests'
     ],
     classifiers=[
