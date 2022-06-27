@@ -52,10 +52,13 @@ to make your scene configuration files and data available in the container (see
 
 ### Option 2: Native environment
 
-1. Install [ParaView (v5.10 or above)](https://www.paraview.org/download/). Make
-   sure to install a version with Python 3.
+1. Install ParaView (v5.10 or above). You can
+   [download a pre-built binary](https://www.paraview.org/download/)
+   or use [Spack](https://spack.readthedocs.io/en/latest/) to configure a build
+   to your liking and compile it from source. Make sure to install ParaView with
+   support for Python 3.
 2. Create a [virtual environment](https://docs.python.org/3/tutorial/venv.html)
-   with ParaView's Python. With Python 3 you could do this:
+   with ParaView's Python. You could do this:
    ```sh
    path/to/python3 -m venv path/to/new/env
    ```
@@ -72,7 +75,7 @@ to make your scene configuration files and data available in the container (see
    `/Applications/ParaView-X.Y.Z.app/Contents/bin`. The Python executable
    determined by the script above may be named `vtkpython`, in which case you
    can look for the `python3` executable in the same directory or a `bin`
-   subdirectory. If you can't find ParaView's Python executable, try using any
+   subdirectory. If you can't find ParaView's Python executable, try using a
    Python installation with the same version as ParaView's.
 3. Give ParaView access to the environment. If you have created the environment
    with Python 3's `venv` then copy the `scripts/activate_this.py` script to the
