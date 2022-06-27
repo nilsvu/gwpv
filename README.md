@@ -112,8 +112,7 @@ to make your scene configuration files and data available in the container (see
    `/Applications/ParaView-X.Y.Z.app/Contents/`.  Add the `-e` flag when
    installing this repository's Python package to install it in "editable" mode,
    i.e. symlink instead of copy it so changes to the repository are reflected in
-   the installation. On Python 2, `pip install llvmlite==0.31.0` manually
-   because later versions drop support for Python 2.
+   the installation.
 
 ## Usage
 
