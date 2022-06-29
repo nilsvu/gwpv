@@ -2,12 +2,13 @@ import yaml
 import logging
 import os
 from .defaults import apply_defaults
+import sys
+if sys.version_info >= (3, 10):
+    from importlib.resources import files, as_file
+else:
+    from importlib_resources import files, as_file
 
 logger = logging.getLogger(__name__)
-
-default_scene_path = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-    'scene_overrides')
 
 
 def apply_partial_overrides(config, partial_config):
@@ -125,6 +126,8 @@ def load_composition(scene_files, paths=[]):
 
 
 def load_scene(scene_files, keypath_overrides=None, paths=[]):
+    default_scene_path_resource = as_file(files('gwpv') / 'scene_overrides')
+    default_scene_path = default_scene_path_resource.__enter__()
     if default_scene_path not in paths:
         paths.append(default_scene_path)
     composition = load_composition(scene_files, paths)
@@ -161,4 +164,5 @@ def load_scene(scene_files, keypath_overrides=None, paths=[]):
         apply_keypath_overrides(scene, keypath_overrides)
         logger.debug("Overriden scene: {}".format(scene))
     apply_defaults(scene)
+    default_scene_path_resource.__exit__(None, None, None)
     return scene

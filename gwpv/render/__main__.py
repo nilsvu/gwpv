@@ -3,7 +3,7 @@
 # This script needs to control its startup sequence to interface with ParaView's
 # `pvpython`.
 #
-# 1. The user launches `gwrender.py` in a Python environment of their choice.
+# 1. The user launches `gwrender` in a Python environment of their choice.
 #    They have `gwpv` and its dependencies installed in this environment.
 #    The `pvpython` executable is available in the `PATH`.
 # 2. CLI arguments are parsed.
@@ -31,17 +31,11 @@ import logging
 import json
 
 
-def _render_frame_window(job_id_and_frame_window, **kwargs):
-    from gwpv.render.frames import render_frames
-    render_frames(job_id=job_id_and_frame_window[0],
-                  frame_window=job_id_and_frame_window[1],
-                  **kwargs)
-
-
 def render_parallel(num_jobs, scene, frame_window=None, **kwargs):
     import functools
     import h5py
     import multiprocessing
+    from multiprocessing import RLock
     from gwpv.scene_configuration import parse_as, animate
     from tqdm import tqdm
 
@@ -87,13 +81,15 @@ def render_parallel(num_jobs, scene, frame_window=None, **kwargs):
         distributed_frames += frames_this_job
     logger.debug("Frame windows: {}".format(frame_windows))
 
+    tqdm.set_lock(RLock())
     pool = multiprocessing.Pool(num_jobs,
                                 initializer=tqdm.set_lock,
                                 initargs=(tqdm.get_lock(), ))
+    from gwpv.render.frames import _render_frame_window
     render_frame_window = functools.partial(_render_frame_window,
                                             scene=scene,
                                             **kwargs)
-    pool.map(render_frame_window, enumerate(frame_windows))
+    pool.starmap(render_frame_window, enumerate(frame_windows))
 
 
 def render_scene_entrypoint(scene_files, keypath_overrides, scene_paths,
@@ -121,6 +117,7 @@ def render_scene_entrypoint(scene_files, keypath_overrides, scene_paths,
     precompute_cached_swsh_grid(scene)
 
     if num_jobs == 1:
+        from gwpv.render.frames import render_frames
         render_frames(scene=scene, **kwargs)
     else:
         render_parallel(num_jobs=num_jobs, scene=scene, **kwargs)
@@ -196,10 +193,10 @@ def render_waveform_entrypoint(scene_files, keypath_overrides, scene_paths,
     render_waveform(scene, **kwargs)
 
 
-if __name__ == '__main__':
+def main():
     import argparse
     parser = argparse.ArgumentParser(
-        'gwrender.py',
+        'gwrender',
         description="Visualize gravitational waves with ParaView")
     subparsers = parser.add_subparsers(dest='entrypoint')
     subparsers.required = True
@@ -321,7 +318,6 @@ if __name__ == '__main__':
     # Setup logging
     logging.basicConfig(level=logging.WARNING - args.verbose * 10)
     if args.logging_config is not None:
-        import logging.config
         if 'version' not in args.logging_config:
             args.logging_config['version'] = 1
         logging.config.dictConfig(args.logging_config)
@@ -334,7 +330,7 @@ if __name__ == '__main__':
     if args.entrypoint == 'scene':
         try:
             logger.debug("Checking if we're running with 'pvpython'...")
-            import paraview
+            import paraview.simple
         except ImportError:
             import sys
             logger.debug("Not running with 'pvpython', dispatching...")
@@ -368,3 +364,6 @@ if __name__ == '__main__':
     del args.subcommand
     del args.entrypoint
     subcommand(**vars(args))
+
+if __name__ == '__main__':
+    main()

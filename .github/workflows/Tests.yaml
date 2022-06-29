@@ -48,19 +48,19 @@ jobs:
       - name: Test 'scene' endpoint
         working-directory: test_rendering
         run: >
-          gwrender.py scene
+          gwrender scene
           $GITHUB_WORKSPACE/Examples/Rainbow/Rainbow.yaml Resolutions/Test
           -o ./ -n2 -v
       - name: Test 'scenes' endpoint
         working-directory: test_rendering
         run: >
-          gwrender.py scenes
+          gwrender scenes
           $GITHUB_WORKSPACE/Examples/Rainbow/Scenes.yaml Resolutions/Test
           -o ./ -n2 -v
       # - name: Test 'waveform' endpoint
       #   working-directory: test_rendering
       #   run: >
-      #     gwrender.py waveform $GITHUB_WORKSPACE/Examples/Rainbow/Rainbow.yaml
+      #     gwrender waveform $GITHUB_WORKSPACE/Examples/Rainbow/Rainbow.yaml
       #     --time-merger 5064 --mass 150 -o ./ -v
   deploy-container:
     name: Deploy container

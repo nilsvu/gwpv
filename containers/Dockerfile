@@ -29,17 +29,16 @@ ENV PYTHONPATH="/usr/local/lib/python3.10/dist-packages:/opt/paraview/lib/python
 # Provide the pre-installed application as another build stage
 FROM dev AS install
 WORKDIR /opt/gwpv
-COPY setup.py ./
+COPY pyproject.toml ./
+COPY setup.cfg ./
 COPY README.md ./
+COPY LICENSE ./
 COPY gwpv ./gwpv
-COPY scripts/gwrender.py ./scripts/gwrender.py
-COPY paraview_plugins ./paraview_plugins
-COPY scene_overrides ./scene_overrides
 RUN pip install .
 WORKDIR /root
 COPY Examples/ ./Examples
 
 # Provide access to the pre-installed application
 FROM install AS app
-ENTRYPOINT [ "gwrender.py" ]
+ENTRYPOINT [ "gwrender" ]
 CMD [ "-h" ]

@@ -12,6 +12,11 @@ import time
 import tqdm
 from gwpv.progress import TqdmLoggingHandler
 from gwpv.scene_configuration import animate, camera_motion, parse_as
+import sys
+if sys.version_info >= (3, 10):
+    from importlib.resources import files, as_file
+else:
+    from importlib_resources import files, as_file
 
 logger = logging.getLogger(__name__)
 
@@ -26,24 +31,20 @@ pv._DisableFirstRenderCameraReset()
 # WaveformDataReader = pv._create_func("WaveformDataReader", pvserver.sources)
 # WaveformToVolume = pv._create_func("WaveformToVolume", pvserver.filters)
 logger.info("Loading ParaView plugins...")
-plugins_dir = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-    'paraview_plugins')
-pv.LoadPlugin(os.path.join(plugins_dir, 'WaveformDataReader.py'),
-              remote=False,
-              ns=globals())
-pv.LoadPlugin(os.path.join(plugins_dir, 'WaveformToVolume.py'),
-              remote=False,
-              ns=globals())
-pv.LoadPlugin(os.path.join(plugins_dir, 'TrajectoryDataReader.py'),
-              remote=False,
-              ns=globals())
-pv.LoadPlugin(os.path.join(plugins_dir, 'FollowTrajectory.py'),
-              remote=False,
-              ns=globals())
-pv.LoadPlugin(os.path.join(plugins_dir, 'TrajectoryTail.py'),
-              remote=False,
-              ns=globals())
+plugins_dir = files('gwpv.paraview_plugins')
+load_plugins = [
+    'WaveformDataReader.py',
+    'WaveformToVolume.py',
+    'TrajectoryDataReader.py',
+    'FollowTrajectory.py',
+    'TrajectoryTail.py',
+    # 'SwshGrid.py'
+]
+for plugin in load_plugins:
+    with as_file(plugins_dir / plugin) as plugin_path:
+        pv.LoadPlugin(str(plugin_path),
+                    remote=False,
+                    ns=globals())
 logger.info("ParaView plugins loaded.")
 
 
@@ -440,6 +441,7 @@ def start_cue(self): pass
 
 def tick(self):
     import paraview.simple as pv
+    import logging
     logger = logging.getLogger('Animation')
     scene_time = pv.GetActiveView().ViewTime
     logger.info("Scene time: {}".format(scene_time))
@@ -499,3 +501,9 @@ def end_cue(self): pass
     logger.info(
         "Rendering done. Total time: {:.2f}s".format(time.time() -
                                                      render_start_time))
+
+
+def _render_frame_window(job_id, frame_window, **kwargs):
+    render_frames(job_id=job_id,
+                  frame_window=frame_window,
+                  **kwargs)

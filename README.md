@@ -36,7 +36,7 @@ docker run -v $PWD:/out nilsleiffischer/gwpv:latest \
 2. `docker run nilsleiffischer/gwpv:latest`
 
 Docker will pull the latest pre-built image and run it. The container runs the
-`gwrender.py` entrypoint automatically (see [Usage](#usage)). To output rendered
+`gwrender` entrypoint automatically (see [Usage](#usage)). To output rendered
 frames and load data from your system you can mount directories using Docker's
 `-v` option. Try rendering one of the example scenes:
 
@@ -119,7 +119,7 @@ to make your scene configuration files and data available in the container (see
 Try rendering one of the example scenes like this:
 
 ```sh
-gwrender.py scene Examples/Rainbow/Still.yaml -o ./
+gwrender scene Examples/Rainbow/Still.yaml -o ./
 ```
 
 The rendered scene is a still frame defined by the configuration file
@@ -128,7 +128,7 @@ The rendered scene is a still frame defined by the configuration file
 itself, defines a short movie:
 
 ```sh
-gwrender.py scene Examples/Rainbow/Rainbow.yaml \
+gwrender scene Examples/Rainbow/Rainbow.yaml \
   --render-movie-to-file ./Rainbow
   --num-jobs NUM_JOBS
 ```
@@ -145,12 +145,12 @@ of a scene configuration file.
 
 Multiple configuration files can be stacked to compose a scene. Configurations
 in later files override those in earlier files. You find a collection of useful
-configuration files in the directory [`scene_overrides/`](scene_overrides/).
-They are found automatically by `gwrender.py`, so you can, for example, easily
+configuration files in the directory [`gwpv/scene_overrides/`](gwpv/scene_overrides/).
+They are found automatically by `gwrender`, so you can, for example, easily
 adjust the background of the scene or the rendering resolution:
 
 ```sh
-gwrender.py \
+gwrender \
   scene Examples/Rainbow/Still.yaml Background/Light Resolutions/High -o ./
 ```
 
@@ -178,23 +178,23 @@ You can sequentially render all scenes listed in such a file by calling the
 `scenes` entrypoint:
 
 ```sh
-gwrender.py scenes Examples/Rainbow/Scenes.yaml -o ./ --num-jobs NUM_JOBS
+gwrender scenes Examples/Rainbow/Scenes.yaml -o ./ --num-jobs NUM_JOBS
 ```
 
 To render a single scene from the file, use the `scene` entrypoint and specify
 the name of the scene:
 
 ```sh
-gwrender.py scene Examples/Rainbow/Scenes.yaml:Rainbow -o ./ --num-jobs NUM_JOBS
+gwrender scene Examples/Rainbow/Scenes.yaml:Rainbow -o ./ --num-jobs NUM_JOBS
 ```
 
 Sometimes it can be useful to override particular configurations from the
 command line, for example to reduce the frame rate for a test rendering. To do
-so, you can pass key-value pairs of scene configuration options to `gwrender.py`
+so, you can pass key-value pairs of scene configuration options to `gwrender`
 like this:
 
 ```sh
-gwrender.py scene Examples/Rainbow/Rainbow.yaml -o ./ \
+gwrender scene Examples/Rainbow/Rainbow.yaml -o ./ \
   --override Animation.FrameRate=1
 ```
 
