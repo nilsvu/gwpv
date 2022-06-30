@@ -1,4 +1,6 @@
-# Explore waveform data in the ParaView GUI application
+# ParaView GUI plugins
+
+With the GUI plugins you can explore waveform data in the ParaView application:
 
 1. We need to make ParaView aware of our Python environment and the plugins in
    this repository. This is easiest done from the command line. Before launching
