@@ -2,7 +2,7 @@
 
 Replace:
   TimeAnnotation:
-    Format: "Time: %f"
+    Format: "Time: {time:f}"
 
   TimeAnnotationRepresentation:
     FontSize: 6
