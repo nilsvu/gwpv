@@ -68,7 +68,7 @@ def precompute_cached_swsh_grid(scene):
     # plugin for the cache to be useful
     cached_swsh_grid(size=config.get('Size', 100),
                      num_points=config.get('SpatialResolution', 100),
-                     spin_weight=-2,
+                     spin_weight=config.get('SpinWeight', -2),
                      ell_max=config.get('EllMax', 2),
                      clip_y_normal=config.get('ClipYNormal', False),
                      clip_z_normal=config.get('ClipZNormal', False),

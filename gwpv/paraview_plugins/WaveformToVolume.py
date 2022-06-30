@@ -180,6 +180,11 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         self.ell_max = value
         self.Modified()
 
+    @smproperty.doublevector(name="SpinWeight", default_values=-2)
+    def SetSpinWeight(self, value):
+        self.spin_weight = value
+        self.Modified()
+
     @smproperty.doublevector(name="RadialScale", default_values=10)
     def SetRadialScale(self, value):
         self.radial_scale = value
@@ -301,7 +306,7 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         swsh_grid, r = cached_swsh_grid(
             size=D,
             num_points=N,
-            spin_weight=spin_weight,
+            spin_weight=self.spin_weight,
             ell_max=ell_max,
             radial_scale=self.radial_scale,
             clip_y_normal=self.clip_y_normal,
