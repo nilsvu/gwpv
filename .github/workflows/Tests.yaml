@@ -3,7 +3,13 @@ name: Tests
 
 on:
   push:
+    branches-ignore:
+      - gh-pages
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # These container builds don't pull caches from the Docker registry, so they
