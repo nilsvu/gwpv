@@ -6,20 +6,21 @@
 1. Install [Docker](https://www.docker.com).
 2. `docker run nilsleiffischer/gwpv:latest`
 
-Docker will pull the latest pre-built image and run it. The container runs the
-`gwrender` entrypoint automatically (see [Usage](usage)). To output rendered
-frames and load data from your system you can mount directories using Docker's
-`-v` option. Try rendering one of the example scenes:
+Try rendering one of the example scenes:
 
 ```sh
 docker run -v $PWD:/out nilsleiffischer/gwpv:latest \
   scene Examples/Rainbow/Still.yaml -o /out
 ```
 
-Here we mount the current working directory `$PWD` as the directory `/out` in
-the container and use it to output frames. You can mount additional directories
-to make your scene configuration files and data available in the container (see
-[Usage](usage)).
+Docker will pull the latest pre-built image and run it. The container runs the
+`gwrender` entrypoint automatically (see [Usage](usage)).
+
+To output rendered frames and load data from your system you can mount
+directories using Docker's `-v` option. In the example above we mount the
+current working directory `$PWD` as the directory `/out` in the container and
+use it to output frames. You can mount additional directories to make your scene
+configuration files and data available in the container (see [Usage](usage)).
 
 ## Option 2: Native environment
 
