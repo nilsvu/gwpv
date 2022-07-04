@@ -1,4 +1,3 @@
-
 Include:
   - Datasources
   - Background/Dark
@@ -22,7 +21,7 @@ TransferFunctions:
     TransferFunction:
       Peaks:
         Colormap: Rainbow Uniform
-        NumPeaks: 7  # A rainbow has 7 colors. No more, no less.
+        NumPeaks: 7 # A rainbow has 7 colors. No more, no less.
         FirstPeak:
           Position: 0.03
           Opacity: 0.1

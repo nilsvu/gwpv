@@ -15,12 +15,12 @@ With the GUI plugins you can explore waveform data in the ParaView application:
    ```
    You will now find the plugins provided by this repository in the ParaView GUI
    when you select 'Tools' > 'Manage Plugins'.
-3. Open a waveform data file in ParaView and select the _Waveform Data Reader_
+2. Open a waveform data file in ParaView and select the _Waveform Data Reader_
    to load it. Waveform data files in
    [SpEC](https://www.black-holes.org/code/SpEC.html)'s output format are
    currently supported.
-4. Add the _Waveform To Volume_ filter to the loaded data.
-5. Change the representation to _Volume_ and adjust the following properties:
+3. Add the _Waveform To Volume_ filter to the loaded data.
+4. Change the representation to _Volume_ and adjust the following properties:
    - Volume Rendering Mode (try _GPU Based_ and enable _Shade_)
    - Scalar Opacity Unit Distance (try a quarter of the domain size)
    - Transfer function (select _Edit color map_)

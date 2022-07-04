@@ -4,18 +4,20 @@
 # sys.path.append(os.path.dirname(__file__))
 # from WaveformDataReader import WaveformDataReader
 
-import numpy as np
 import logging
 import time
-from vtkmodules.vtkCommonDataModel import vtkUniformGrid
-from vtkmodules.vtkCommonCore import vtkDataArraySelection
-from vtkmodules.util.vtkAlgorithm import VTKPythonAlgorithmBase
-from vtkmodules.numpy_interface import dataset_adapter as dsa
-from paraview.util.vtkAlgorithm import smproxy, smproperty, smdomain
+
+import numpy as np
 from paraview import util
+from paraview.util.vtkAlgorithm import smdomain, smproperty, smproxy
 from paraview.vtk.util import numpy_support as vtknp
-import gwpv.plugin_util.timesteps as timesteps_util
+from vtkmodules.numpy_interface import dataset_adapter as dsa
+from vtkmodules.util.vtkAlgorithm import VTKPythonAlgorithmBase
+from vtkmodules.vtkCommonCore import vtkDataArraySelection
+from vtkmodules.vtkCommonDataModel import vtkUniformGrid
+
 import gwpv.plugin_util.data_array_selection as das_util
+import gwpv.plugin_util.timesteps as timesteps_util
 from gwpv import swsh_cache
 
 logger = logging.getLogger(__name__)
@@ -28,7 +30,7 @@ def get_mode_name(l, abs_m):
 # Reproduces `spherical_functions.LM_index` so we don't need to import the
 # `spherical_functions` module when using a cached SWSH grid
 def LM_index(ell, m, ell_min):
-    return ell * (ell + 1) - ell_min ** 2 + m
+    return ell * (ell + 1) - ell_min**2 + m
 
 
 def smoothstep(x):
@@ -50,31 +52,44 @@ def deactivation(x, width, outer):
 _cached_swsh_grid = None
 _cached_r = None
 _cached_grid_id = None
-def cached_swsh_grid(size, radial_scale, activation_offset, activation_width, deactivation_width, add_one_over_r_scaling, **swsh_grid_kwargs):
+
+
+def cached_swsh_grid(
+    size,
+    radial_scale,
+    activation_offset,
+    activation_width,
+    deactivation_width,
+    add_one_over_r_scaling,
+    **swsh_grid_kwargs,
+):
     global _cached_swsh_grid, _cached_r, _cached_grid_id
-    grid_id = dict(size=size,
-                   radial_scale=radial_scale,
-                   activation_offset=activation_offset,
-                   activation_width=activation_width,
-                   deactivation_width=deactivation_width,
-                   add_one_over_r_scaling=add_one_over_r_scaling)
+    grid_id = dict(
+        size=size,
+        radial_scale=radial_scale,
+        activation_offset=activation_offset,
+        activation_width=activation_width,
+        deactivation_width=deactivation_width,
+        add_one_over_r_scaling=add_one_over_r_scaling,
+    )
     grid_id.update(swsh_grid_kwargs)
     if _cached_grid_id == grid_id:
         logger.debug("Using cached SWSHs grid from memory.")
         return _cached_swsh_grid, _cached_r
     else:
         logger.debug("No SWSH grid in memory, retrieving from disk cache.")
-        swsh_grid, r = swsh_cache.cached_swsh_grid(size=size,
-                                                   **swsh_grid_kwargs)
+        swsh_grid, r = swsh_cache.cached_swsh_grid(
+            size=size, **swsh_grid_kwargs
+        )
         # Apply screening
-        screen = activation(r - activation_offset,
-                            activation_width) * deactivation(
-                                r, deactivation_width, size)
-        swsh_grid *= screen.reshape(screen.shape + (1, ))
+        screen = activation(
+            r - activation_offset, activation_width
+        ) * deactivation(r, deactivation_width, size)
+        swsh_grid *= screen.reshape(screen.shape + (1,))
         # Apply radial scale
         r *= radial_scale
         if add_one_over_r_scaling:
-            swsh_grid /= (r + 1.e-30).reshape(r.shape + (1,))
+            swsh_grid /= (r + 1.0e-30).reshape(r.shape + (1,))
         # Cache and return
         _cached_swsh_grid = swsh_grid
         _cached_r = r
@@ -106,7 +121,8 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
             #   (in Paraview v5.7.0 at least)
             # - The unstructured grids don't support the 'GPU Based'
             #   volume rendering mode, which can do shading and looks nice
-            outputType='vtkUniformGrid')
+            outputType="vtkUniformGrid",
+        )
         self.modes_selection = vtkDataArraySelection()
         # TODO: We should really retrieve the available modes from the input
         # info in `RequestInformation`, but the `WAVEFORM_MODES` keys is not
@@ -120,18 +136,20 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
             for m in range(0, l + 1):
                 self.modes_selection.AddArray(get_mode_name(l, m))
         self.modes_selection.AddObserver(
-            "ModifiedEvent", das_util.create_modified_callback(self))
+            "ModifiedEvent", das_util.create_modified_callback(self)
+        )
         self.polarizations_selection = vtkDataArraySelection()
         self.polarizations_selection.AddArray("Plus")
         self.polarizations_selection.AddArray("Cross")
         self.polarizations_selection.AddObserver(
-            "ModifiedEvent", das_util.create_modified_callback(self))
+            "ModifiedEvent", das_util.create_modified_callback(self)
+        )
 
     def FillInputPortInformation(self, port, info):
         # When using multiple inputs we (may) have to set their data types here
         # info.Set(self.INPUT_REQUIRED_DATA_TYPE(),
         #          'vtkTable' if port == 0 else 'vtkUniformGrid')
-        info.Set(self.INPUT_REQUIRED_DATA_TYPE(), 'vtkTable')
+        info.Set(self.INPUT_REQUIRED_DATA_TYPE(), "vtkTable")
 
     def _get_waveform_data(self):
         return dsa.WrapDataObject(self.GetInputDataObject(0, 0))
@@ -237,14 +255,16 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
     def _get_timesteps(self):
         logger.debug("Getting time range from data...")
         waveform_data = self._get_waveform_data()
-        ts = waveform_data.RowData['Time']
+        ts = waveform_data.RowData["Time"]
         # Using a few timesteps within the data range so we can animate through
         # them in the GUI
         return np.linspace(ts[0], ts[-1], 100)
 
-    @smproperty.doublevector(name="TimestepValues",
-                             information_only="1",
-                             si_class="vtkSITimeStepsProperty")
+    @smproperty.doublevector(
+        name="TimestepValues",
+        information_only="1",
+        si_class="vtkSITimeStepsProperty",
+    )
     def GetTimestepValues(self):
         return self._get_timesteps().tolist()
 
@@ -271,9 +291,7 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         # This needs the time data from the waveform file, so we may have to
         # set the `TIME_RANGE` and `TIME_STEPS` already in the
         # WaveformDataReader.
-        timesteps_util.set_timesteps(self,
-                                     self._get_timesteps(),
-                                     logger=logger)
+        timesteps_util.set_timesteps(self, self._get_timesteps(), logger=logger)
 
         # logger.debug("Information object: {}".format(info))
         return 1
@@ -292,7 +310,7 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         # output.SetDimensions(*grid_data.GetDimensions())
         # output.SetOrigin(*grid_data.GetOrigin())
         # output.SetSpacing(*grid_data.GetSpacing())
-        dx = 2. * D / N
+        dx = 2.0 * D / N
         N_y = N // 2 if self.clip_y_normal else N
         N_z = N // 2 if self.clip_z_normal else N
         output.SetDimensions(N, N_y, N_z)
@@ -315,9 +333,10 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
             activation_width=self.activation_width,
             deactivation_width=self.deactivation_width,
             add_one_over_r_scaling=self.add_one_over_r_scaling,
-            cache_dir=self.swsh_cache_dir)
+            cache_dir=self.swsh_cache_dir,
+        )
 
-        logger.info("Computing volume data at t={}...".format(t))
+        logger.info(f"Computing volume data at t={t}...")
         start_time = time.time()
 
         # Compute scaled waveform phase on the grid
@@ -325,11 +344,11 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         phase = t - r
 
         # Invert rotation direction
-        rotation_direction = -1. if self.invert_rotation_direction else 1.
+        rotation_direction = -1.0 if self.invert_rotation_direction else 1.0
 
         # Compute strain in the volume from the input waveform data
         skip_timesteps = self.keep_every_n_timestep
-        waveform_timesteps = waveform_data.RowData['Time'][::skip_timesteps]
+        waveform_timesteps = waveform_data.RowData["Time"][::skip_timesteps]
         strain = np.zeros(len(r), dtype=np.complex)
         # Optimization for when the waveform is sampled uniformly
         # TODO: Cache this
@@ -338,24 +357,44 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         global has_shown_warning_nonuniformly_sampled
         if waveform_uniformly_sampled:
             dt = dt[0]
-            logger.debug("Waveform sampled uniformly with dt={:.2e}, using optimized interpolation:".format(dt))
+            logger.debug(
+                f"Waveform sampled uniformly with dt={dt:.2e}, using optimized"
+                " interpolation:"
+            )
             waveform_start_time = waveform_timesteps[0]
-            waveform_start_index = min(len(waveform_timesteps) - 2, max(
-                0, int(np.floor((np.min(phase) - waveform_start_time) / dt))))
-            waveform_stop_index = max(waveform_start_index + 1, min(
-                len(waveform_timesteps),
-                int(np.ceil((np.max(phase) - waveform_start_time) / dt))))
+            waveform_start_index = min(
+                len(waveform_timesteps) - 2,
+                max(
+                    0, int(np.floor((np.min(phase) - waveform_start_time) / dt))
+                ),
+            )
+            waveform_stop_index = max(
+                waveform_start_index + 1,
+                min(
+                    len(waveform_timesteps),
+                    int(np.ceil((np.max(phase) - waveform_start_time) / dt)),
+                ),
+            )
             if waveform_stop_index == len(waveform_timesteps):
                 waveform_stop_index = -1
             logger.debug(
-                "Restricting interpolation to waveform indices {}, that's between waveform times {}. We will interpolate to times between {} (should be contained in restricted waveform range except for boundary effects)."
-                .format((waveform_start_index, waveform_stop_index),
-                        (waveform_timesteps[waveform_start_index],
-                         waveform_timesteps[waveform_stop_index]),
-                        (np.min(phase), np.max(phase))))
-            waveform_timesteps = waveform_timesteps[waveform_start_index:waveform_stop_index]
+                "Restricting interpolation to waveform indices"
+                f" ({waveform_start_index}, {waveform_stop_index}), that's"
+                " between waveform times"
+                f" ({waveform_timesteps[waveform_start_index]},"
+                f" {waveform_timesteps[waveform_stop_index]}). We will"
+                f" interpolate to times between ({np.min(phase)},"
+                f" {np.max(phase)}) (should be contained in restricted waveform"
+                " range except for boundary effects)."
+            )
+            waveform_timesteps = waveform_timesteps[
+                waveform_start_index:waveform_stop_index
+            ]
         elif not has_shown_warning_nonuniformly_sampled:
-            logger.warning("Waveform is not sampled uniformly so interpolation is slightly more expensive.")
+            logger.warning(
+                "Waveform is not sampled uniformly so interpolation is slightly"
+                " more expensive."
+            )
             has_shown_warning_nonuniformly_sampled = True
         # for i in range(self.modes_selection.GetNumberOfArrays()):
         #     mode_name = self.modes_selection.GetArrayName(i)
@@ -370,47 +409,58 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
                     dataset_name = "Y_l{}_m{}".format(l, m)
                     mode_profile = swsh_grid[:, LM_index(l, m, 0)]
                     # mode_profile = vtknp.vtk_to_numpy(grid_data.GetPointData()[dataset_name])
-                    waveform_mode_data = waveform_data.RowData[dataset_name][::skip_timesteps]
+                    waveform_mode_data = waveform_data.RowData[dataset_name][
+                        ::skip_timesteps
+                    ]
                     if isinstance(waveform_mode_data, dsa.VTKNoneArray):
                         logger.warning(
-                            "Dataset '{}' for mode {} not available in waveform data, skipping."
-                            .format(dataset_name, (l, m)))
+                            f"Dataset '{dataset_name}' for mode {(l, m)} not"
+                            " available in waveform data, skipping."
+                        )
                         continue
                     # TODO: Make sure inverting the rotation direction like this
                     # is correct.
-                    waveform_mode_data = waveform_mode_data[:, 0] + rotation_direction * 1j * waveform_mode_data[:, 1]
+                    waveform_mode_data = (
+                        waveform_mode_data[:, 0]
+                        + rotation_direction * 1j * waveform_mode_data[:, 1]
+                    )
                     if self.normalize_each_mode:
                         waveform_mode_data /= np.max(np.abs(waveform_mode_data))
                     if waveform_uniformly_sampled:
-                        waveform_mode_data = waveform_mode_data[waveform_start_index:waveform_stop_index]
-                    mode_data = np.interp(phase,
-                                          waveform_timesteps,
-                                          waveform_mode_data,
-                                          left=0.,
-                                          right=0.)
+                        waveform_mode_data = waveform_mode_data[
+                            waveform_start_index:waveform_stop_index
+                        ]
+                    mode_data = np.interp(
+                        phase,
+                        waveform_timesteps,
+                        waveform_mode_data,
+                        left=0.0,
+                        right=0.0,
+                    )
                     strain_mode += mode_data * mode_profile
                 strain += strain_mode
                 # Expose individual modes in output
                 if self.store_individual_modes:
                     if self.polarizations_selection.ArrayIsEnabled("Plus"):
                         strain_mode_real_vtk = vtknp.numpy_to_vtk(
-                            np.real(strain_mode), deep=True)
-                        strain_mode_real_vtk.SetName(mode_name + ' Plus')
+                            np.real(strain_mode), deep=True
+                        )
+                        strain_mode_real_vtk.SetName(mode_name + " Plus")
                         output.GetPointData().AddArray(strain_mode_real_vtk)
                     if self.polarizations_selection.ArrayIsEnabled("Cross"):
                         strain_mode_imag_vtk = vtknp.numpy_to_vtk(
-                            np.imag(strain_mode), deep=True)
-                        strain_mode_imag_vtk.SetName(mode_name + ' Cross')
+                            np.imag(strain_mode), deep=True
+                        )
+                        strain_mode_imag_vtk.SetName(mode_name + " Cross")
                         output.GetPointData().AddArray(strain_mode_imag_vtk)
         if self.polarizations_selection.ArrayIsEnabled("Plus"):
             strain_real_vtk = vtknp.numpy_to_vtk(np.real(strain), deep=True)
-            strain_real_vtk.SetName('Plus strain')
+            strain_real_vtk.SetName("Plus strain")
             output.GetPointData().AddArray(strain_real_vtk)
         if self.polarizations_selection.ArrayIsEnabled("Cross"):
             strain_imag_vtk = vtknp.numpy_to_vtk(np.imag(strain), deep=True)
-            strain_imag_vtk.SetName('Cross strain')
+            strain_imag_vtk.SetName("Cross strain")
             output.GetPointData().AddArray(strain_imag_vtk)
 
-        logger.info("Volume data computed in {:.3f}s.".format(time.time() -
-                                                              start_time))
+        logger.info(f"Volume data computed in {time.time() - start_time:.3f}s.")
         return 1

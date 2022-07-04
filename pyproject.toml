@@ -2,3 +2,11 @@
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 80
+target-version = ['py37']
+preview = true
+
+[tool.isort]
+profile = "black"

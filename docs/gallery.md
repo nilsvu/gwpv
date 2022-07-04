@@ -22,6 +22,7 @@ detectors on April 12th, 2019 (GW190412).
 - Video:
 
   [![GW190412 video](http://img.youtube.com/vi/5AkT4bPk-00/0.jpg)](http://www.youtube.com/watch?v=5AkT4bPk-00)
+
 - Selected media coverage:
   - <https://www.nature.com/articles/d41586-020-01153-7>
   - <https://www.sciencenews.org/article/gravitational-waves-unevenly-sized-black-holes-ligo-virgo>
@@ -30,15 +31,17 @@ detectors on April 12th, 2019 (GW190412).
   - <https://www.ligo.caltech.edu/news/ligo20200420>
   - <https://www.spektrum.de/news/neuartiges-gravitationswellensignal/1725506>
 - Appearances in scientific publications:
-  - *A Horizon Study for Cosmic Explorer: Science, Observatories, and Community*, [arXiv:2109.09882](https://arxiv.org/abs/2109.09882)
-  - *The Next Generation Global Gravitational Wave Observatory: The Science Book*, [arXiv:2111.06990](https://arxiv.org/abs/2111.06990)
-  - Lovelace, G. *Computational challenges in numerical relativity in the gravitational-wave era*, [Nat Comput Sci **1**, 450–452 (2021)](https://doi.org/10.1038/s43588-021-00102-2)
+  - _A Horizon Study for Cosmic Explorer: Science, Observatories, and Community_, [arXiv:2109.09882](https://arxiv.org/abs/2109.09882)
+  - _The Next Generation Global Gravitational Wave Observatory: The Science Book_, [arXiv:2111.06990](https://arxiv.org/abs/2111.06990)
+  - Lovelace, G. _Computational challenges in numerical relativity in the gravitational-wave era_, [Nat Comput Sci **1**, 450–452 (2021)](https://doi.org/10.1038/s43588-021-00102-2)
 - Magazines:
+
   - [Sky & Telescope June 2022 (cover)](https://shopatsky.com/products/sky-telescope-june-2022-magazine)
 
     ```{image} img/ST_cover_june2022.png
     :width: 250px
     ```
+
 - Prizes:
   - [Figure 1a scientific art exhibition 2021](https://figure1a.org/exhibitions)
 

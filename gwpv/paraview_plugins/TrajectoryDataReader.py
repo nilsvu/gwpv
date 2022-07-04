@@ -1,26 +1,29 @@
 # Trajectory data Paraview reader
 
+import logging
+
 import h5py
 import numpy as np
-from vtkmodules.vtkCommonDataModel import vtkPolyData
-from vtkmodules.util.vtkAlgorithm import VTKPythonAlgorithmBase
-from vtkmodules.numpy_interface import dataset_adapter as dsa
-from paraview.util.vtkAlgorithm import smproxy, smproperty, smdomain, smhint
-from paraview.vtk.util import numpy_support as vtknp
 from paraview import vtk
-import logging
+from paraview.util.vtkAlgorithm import smdomain, smhint, smproperty, smproxy
+from paraview.vtk.util import numpy_support as vtknp
+from vtkmodules.numpy_interface import dataset_adapter as dsa
+from vtkmodules.util.vtkAlgorithm import VTKPythonAlgorithmBase
+from vtkmodules.vtkCommonDataModel import vtkPolyData
+
 logger = logging.getLogger(__name__)
 
 
-@smproxy.reader(label="Trajectory Data Reader",
-                extensions="h5",
-                file_description="HDF5 files")
+@smproxy.reader(
+    label="Trajectory Data Reader",
+    extensions="h5",
+    file_description="HDF5 files",
+)
 class TrajectoryDataReader(VTKPythonAlgorithmBase):
     def __init__(self):
-        VTKPythonAlgorithmBase.__init__(self,
-                                        nInputPorts=0,
-                                        nOutputPorts=1,
-                                        outputType='vtkPolyData')
+        VTKPythonAlgorithmBase.__init__(
+            self, nInputPorts=0, nOutputPorts=1, outputType="vtkPolyData"
+        )
 
     @smproperty.stringvector(name="File")
     @smdomain.filelist()
@@ -29,19 +32,19 @@ class TrajectoryDataReader(VTKPythonAlgorithmBase):
         self._filename = value
         self.Modified()
 
-    @smproperty.stringvector(name="Subfile",
-                             default_values="/")
+    @smproperty.stringvector(name="Subfile", default_values="/")
     def SetSubfile(self, value):
         self._subfile = value
         self.Modified()
 
-    @smproperty.stringvector(name="CoordinatesDataset",
-                             default_values="CoordCenterInertial.dat")
+    @smproperty.stringvector(
+        name="CoordinatesDataset", default_values="CoordCenterInertial.dat"
+    )
     def SetCoordinatesDataset(self, value):
         self._coords_dataset = value
         self.Modified()
 
-    @smproperty.doublevector(name="RadialScale", default_values=1.)
+    @smproperty.doublevector(name="RadialScale", default_values=1.0)
     def SetRadialScale(self, value):
         self._radial_scale = value
         self.Modified()
@@ -50,11 +53,11 @@ class TrajectoryDataReader(VTKPythonAlgorithmBase):
         logger.debug("Requesting data...")
         output = dsa.WrapDataObject(vtkPolyData.GetData(outInfo))
 
-        with h5py.File(self._filename, 'r') as trajectory_file:
+        with h5py.File(self._filename, "r") as trajectory_file:
             subfile = trajectory_file[self._subfile]
             coords = np.array(subfile[self._coords_dataset])
         coords[:, 1:] *= self._radial_scale
-        logger.debug("Loaded coordinates with shape {}.".format(coords.shape))
+        logger.debug(f"Loaded coordinates with shape {coords.shape}.")
 
         # Construct a line of points
         points_vtk = vtk.vtkPoints()
@@ -73,16 +76,16 @@ class TrajectoryDataReader(VTKPythonAlgorithmBase):
 
         # Add time data to the points
         time = vtknp.numpy_to_vtk(coords[:, 0])
-        time.SetName('Time')
+        time.SetName("Time")
         output.GetPointData().AddArray(time)
 
         # Add remaining datasets from file to trajectory points
-        with h5py.File(self._filename, 'r') as trajectory_file:
+        with h5py.File(self._filename, "r") as trajectory_file:
             subfile = trajectory_file[self._subfile]
             for dataset in subfile:
                 if dataset == self._coords_dataset:
                     continue
                 dataset_vtk = vtknp.numpy_to_vtk(subfile[dataset][:, 1:])
-                dataset_vtk.SetName(dataset.replace('.dat', ''))
+                dataset_vtk.SetName(dataset.replace(".dat", ""))
                 output.GetPointData().AddArray(dataset_vtk)
         return 1

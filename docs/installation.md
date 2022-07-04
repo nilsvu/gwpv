@@ -1,4 +1,3 @@
-
 # Installation
 
 ## Option 1: Pre-built Docker container
@@ -52,9 +51,11 @@ configuration files and data available in the container (see [Usage](usage)).
 3. Give ParaView access to the environment. If you have created the environment
    with Python 3's `venv` then copy the `scripts/activate_this.py` script to the
    environment:
+
    ```sh
    cp scripts/activate_this.py path/to/new/env/bin
    ```
+
    Note that environments created with the `virtualenv` package include this
    script automatically and you don't need to copy it. The script is used to
    activate the environment from within Python scripts. It allows ParaView's
@@ -64,14 +65,18 @@ configuration files and data available in the container (see [Usage](usage)).
    You may also want to add the ParaView executables such as `pvpython` to your
    `PATH` when the environment is activated for convenient access. To do so you
    can append the following line to `path/to/env/bin/activate` as well:
+
    ```sh
    export PATH="path/to/paraview/bin/:$PATH"
    ```
+
    On macOS you may also need to append this line to pick up the `paraview` GUI
    executable:
+
    ```sh
    export PATH="path/to/paraview/MacOS/:$PATH"
    ```
+
 4. Install the following packages in the environment, making sure to use
    ParaView's HDF5 when installing `h5py`:
    ```sh
@@ -81,7 +86,7 @@ configuration files and data available in the container (see [Usage](usage)).
    ```
    Note that the `HDF5_DIR` should have `include` and `lib` directories with
    ParaView's HDF5. On macOS it is typically
-   `/Applications/ParaView-X.Y.Z.app/Contents/`.  Add the `-e` flag when
+   `/Applications/ParaView-X.Y.Z.app/Contents/`. Add the `-e` flag when
    installing this repository's Python package to install it in "editable" mode,
    i.e. symlink instead of copy it so changes to the repository are reflected in
    the installation.

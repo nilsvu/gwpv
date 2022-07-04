@@ -1,4 +1,3 @@
-
 <p align="center" id="banner"><img src="https://raw.githubusercontent.com/nilsvu/gwpv/develop/docs/banner.png"></p>
 
 # gwpv
