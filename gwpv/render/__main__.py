@@ -413,7 +413,14 @@ def main():
     args = parser.parse_args()
 
     # Setup logging
-    logging.basicConfig(level=logging.WARNING - args.verbose * 10)
+    from rich.logging import RichHandler
+    FORMAT = "%(message)s"
+    logging.basicConfig(
+        level=logging.WARNING - args.verbose * 10,
+        format=FORMAT,
+        datefmt="[%X]",
+        handlers=[RichHandler()],
+    )
     if args.logging_config is not None:
         if "version" not in args.logging_config:
             args.logging_config["version"] = 1
@@ -422,6 +429,10 @@ def main():
         del args.verbose
         del args.logging_config
     logger = logging.getLogger(__name__)
+
+    # Setup tracebacks
+    import rich.traceback
+    rich.traceback.install(show_locals=True)
 
     # Re-launch the script with `pvpython` if necessary
     if args.entrypoint == "scene":
