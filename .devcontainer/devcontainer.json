@@ -1,11 +1,7 @@
 {
   "name": "gwpv",
-  "context": "..",
-  "dockerFile": "../containers/Dockerfile",
-  "build": {
-    "target": "dev"
-  },
-  "postCreateCommand": "pip install .",
+  "image": "nilsleiffischer/gwpv:latest-dev",
+  "postCreateCommand": "pip install -e .",
   "settings": {},
   "extensions": []
 }
