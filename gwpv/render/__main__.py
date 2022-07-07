@@ -29,6 +29,26 @@ from __future__ import division
 
 import json
 import logging
+import os
+import sys
+
+# Work around https://gitlab.kitware.com/paraview/paraview/-/issues/21457
+sys.stdout = sys.__stdout__
+sys.stderr = sys.__stderr__
+sys.stdin = sys.__stdin__
+
+# Activate the virtual environment if requested before trying to import
+# anything outside the standard library
+if __name__ == "__main__" and "--activate-venv" in sys.argv:
+    activate_venv = sys.argv[sys.argv.index("--activate-venv") + 1]
+    activate_venv_script = os.path.join(
+        activate_venv, "bin", "activate_this.py"
+    )
+    assert os.path.exists(
+        activate_venv_script
+    ), f"No 'bin/activate_this.py' script found in '{activate_venv}'."
+    with open(activate_venv_script, "r") as f:
+        exec(f.read(), {"__file__": activate_venv_script})
 
 
 def render_parallel(num_jobs, scene, frame_window=None, **kwargs):
@@ -159,9 +179,7 @@ def render_scene_entrypoint(
 
 
 def dispatch_to_pvpython(force_offscreen_rendering, cli_args):
-    import os
     import subprocess
-    import sys
 
     logger = logging.getLogger(__name__)
     # Check if we're running in a virtual environment and pass that
@@ -196,7 +214,6 @@ def render_scenes_entrypoint(
     logging_config,
 ):
     import itertools
-    import os
 
     import yaml
     from tqdm import tqdm
@@ -414,6 +431,7 @@ def main():
 
     # Setup logging
     from rich.logging import RichHandler
+
     FORMAT = "%(message)s"
     logging.basicConfig(
         level=logging.WARNING - args.verbose * 10,
@@ -432,6 +450,7 @@ def main():
 
     # Setup tracebacks
     import rich.traceback
+
     rich.traceback.install(show_locals=True)
 
     # Re-launch the script with `pvpython` if necessary
@@ -440,31 +459,13 @@ def main():
             logger.debug("Checking if we're running with 'pvpython'...")
             import paraview.simple
         except ImportError:
-            import sys
-
             logger.debug("Not running with 'pvpython', dispatching...")
             sys.exit(
-                dispatch_to_pvpython(args.force_offscreen_rendering, sys.argv)
+                dispatch_to_pvpython(
+                    args.force_offscreen_rendering, [__file__] + sys.argv[1:]
+                )
             )
         logger.debug("Running with 'pvpython'.")
-
-    # Activate the virtual environment if requested before trying to import
-    # from `gwpv` below
-    if args.entrypoint in ["scene", "scenes"]:
-        if args.activate_venv:
-            activate_venv = args.activate_venv
-            logger.debug(f"Activating venv: {activate_venv}")
-            import os
-
-            activate_venv_script = os.path.join(
-                activate_venv, "bin", "activate_this.py"
-            )
-            assert os.path.exists(
-                activate_venv_script
-            ), f"No 'bin/activate_this.py' script found in '{activate_venv}'."
-            with open(activate_venv_script, "r") as f:
-                exec(f.read(), {"__file__": activate_venv_script})
-        del args.activate_venv
 
     # Import render_frames here to make loading the ParaView plugins work with
     # `multiprocessing`
