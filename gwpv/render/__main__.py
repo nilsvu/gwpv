@@ -51,79 +51,6 @@ if __name__ == "__main__" and "--activate-venv" in sys.argv:
         exec(f.read(), {"__file__": activate_venv_script})
 
 
-def render_parallel(num_jobs, scene, frame_window=None, **kwargs):
-    import functools
-    import multiprocessing
-    from multiprocessing import RLock
-
-    import h5py
-    from tqdm import tqdm
-
-    from gwpv.scene_configuration import animate, parse_as
-
-    logger = logging.getLogger(__name__)
-
-    # Infer frame window if needed
-    if "FreezeTime" in scene["Animation"]:
-        frame_window = (0, 1)
-    elif frame_window is None:
-        if "Crop" in scene["Animation"]:
-            max_animation_length = (
-                scene["Animation"]["Crop"][1] - scene["Animation"]["Crop"][0]
-            )
-        else:
-            waveform_file_and_subfile = parse_as.file_and_subfile(
-                scene["Datasources"]["Waveform"]
-            )
-            with h5py.File(waveform_file_and_subfile[0], "r") as waveform_file:
-                waveform_times = waveform_file[waveform_file_and_subfile[1]][
-                    "Y_l2_m2.dat"
-                ][:, 0]
-                max_animation_length = waveform_times[-1] - waveform_times[0]
-                logger.debug(
-                    f"Inferred max. animation length {max_animation_length}M"
-                    " from waveform data."
-                )
-        frame_window = (
-            0,
-            animate.num_frames(
-                max_animation_length=max_animation_length,
-                animation_speed=scene["Animation"]["Speed"],
-                frame_rate=scene["Animation"]["FrameRate"],
-            ),
-        )
-        logger.debug(f"Inferred total frame window: {frame_window}")
-
-    num_frames = frame_window[1] - frame_window[0]
-    frames_per_job = int(num_frames / num_jobs)
-    extra_frames = num_frames % num_jobs
-    logger.debug(
-        f"Using {num_jobs} jobs with {frames_per_job} frames per job"
-        f" ({extra_frames} jobs render an additional frame)."
-    )
-
-    frame_windows = []
-    distributed_frames = frame_window[0]
-    for i in range(num_jobs):
-        frames_this_job = frames_per_job + (1 if i < extra_frames else 0)
-        frame_windows.append(
-            (distributed_frames, distributed_frames + frames_this_job)
-        )
-        distributed_frames += frames_this_job
-    logger.debug(f"Frame windows: {frame_windows}")
-
-    tqdm.set_lock(RLock())
-    pool = multiprocessing.Pool(
-        num_jobs, initializer=tqdm.set_lock, initargs=(tqdm.get_lock(),)
-    )
-    from gwpv.render.frames import _render_frame_window
-
-    render_frame_window = functools.partial(
-        _render_frame_window, scene=scene, **kwargs
-    )
-    pool.starmap(render_frame_window, enumerate(frame_windows))
-
-
 def render_scene_entrypoint(
     scene_files,
     keypath_overrides,
@@ -131,6 +58,7 @@ def render_scene_entrypoint(
     num_jobs,
     render_movie_to_file,
     force_offscreen_rendering,
+    subprocess_logging_config=None,
     **kwargs,
 ):
     from gwpv.download_data import download_data
@@ -159,11 +87,28 @@ def render_scene_entrypoint(
     precompute_cached_swsh_grid(scene)
 
     if num_jobs == 1:
+        from gwpv.progress import render_progress
         from gwpv.render.frames import render_frames
 
-        render_frames(scene=scene, **kwargs)
+        with render_progress as progress:
+            task_id = progress.add_task("Rendering", start=False)
+            for progress_update in render_frames(
+                scene=scene,
+                **kwargs,
+            ):
+                if "start" in progress_update:
+                    progress.start_task(task_id)
+                else:
+                    progress.update(task_id, **progress_update)
     else:
-        render_parallel(num_jobs=num_jobs, scene=scene, **kwargs)
+        from gwpv.render.parallel import render_parallel
+
+        render_parallel(
+            num_jobs=num_jobs,
+            scene=scene,
+            subprocess_logging_config=subprocess_logging_config,
+            **kwargs,
+        )
 
     if (
         render_movie_to_file is not None
@@ -215,8 +160,8 @@ def render_scenes_entrypoint(
 ):
     import itertools
 
+    import rich
     import yaml
-    from tqdm import tqdm
 
     common_args = (
         list(
@@ -240,13 +185,13 @@ def render_scenes_entrypoint(
         )
     )
 
-    with tqdm(
-        yaml.safe_load(open(scenes_file, "r"))["Scenes"],
-        desc="Scenes",
-        unit="scene",
-    ) as scenes:
-        for scene in scenes:
-            scenes.set_postfix(current_scene=scene["Name"])
+    with open(scenes_file, "r") as open_scenes_file:
+        scenes = yaml.safe_load(open_scenes_file)["Scenes"]
+        for i, scene in enumerate(scenes):
+            rich.print(
+                f"Rendering scene {i + 1}/{len(scenes)}:"
+                f" [bold]{scene['Name']}[/bold]"
+            )
             scene_files = [scenes_file + ":" + scene["Name"]] + scene_overrides
             movie_file = os.path.join(
                 output_dir, output_prefix + scene["Name"] + output_suffix
@@ -333,12 +278,6 @@ def main():
         "--show-preview",
         action="store_true",
         help="Show a window with a preview of the full movie.",
-    )
-    parser_scene.add_argument(
-        "--hide-progress",
-        dest="show_progress",
-        action="store_false",
-        help="Hide the progress bar",
     )
 
     # `scenes` CLI
@@ -437,10 +376,13 @@ def main():
     from rich.logging import RichHandler
 
     FORMAT = "%(message)s"
-    logging.basicConfig(
+    logging_config = dict(
         level=logging.WARNING - args.verbose * 10,
         format=FORMAT,
         datefmt="[%X]",
+    )
+    logging.basicConfig(
+        **logging_config,
         handlers=[RichHandler()],
     )
     if args.logging_config is not None:
@@ -450,6 +392,8 @@ def main():
     if args.entrypoint != "scenes":
         del args.verbose
         del args.logging_config
+    if args.entrypoint == "scene":
+        args.subprocess_logging_config = logging_config
     logger = logging.getLogger(__name__)
 
     # Setup tracebacks
@@ -470,11 +414,6 @@ def main():
                 )
             )
         logger.debug("Running with 'pvpython'.")
-
-    # Import render_frames here to make loading the ParaView plugins work with
-    # `multiprocessing`
-    if args.entrypoint == "scene":
-        from gwpv.render.frames import render_frames
 
     # Forward to the user-selected entrypoint
     subcommand = args.subcommand

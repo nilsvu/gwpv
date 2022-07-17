@@ -9,11 +9,9 @@ import h5py
 import numpy as np
 import paraview.servermanager as pvserver
 import paraview.simple as pv
-import tqdm
 
 import gwpv.scene_configuration.color as config_color
 import gwpv.scene_configuration.transfer_functions as tf
-from gwpv.progress import TqdmLoggingHandler
 from gwpv.scene_configuration import animate, camera_motion, parse_as
 
 if sys.version_info >= (3, 10):
@@ -48,6 +46,11 @@ for plugin in load_plugins:
         pv.LoadPlugin(str(plugin_path), remote=False, ns=globals())
 logger.info("ParaView plugins loaded.")
 
+# Work around https://gitlab.kitware.com/paraview/paraview/-/issues/21457
+sys.stdout = sys.__stdout__
+sys.stderr = sys.__stderr__
+sys.stdin = sys.__stdin__
+
 
 def render_frames(
     scene,
@@ -57,9 +60,11 @@ def render_frames(
     save_state_to_file=None,
     no_render=False,
     show_preview=False,
-    show_progress=False,
-    job_id=None,
 ):
+    """Render the frames for the `scene`
+    
+    This function `yield`s progress updates.
+    """
     # Validate scene
     if scene["View"]["ViewSize"][0] % 16 != 0:
         logger.warning(
@@ -172,6 +177,8 @@ def render_frames(
         logger.info(f"Freezing time at {frozen_time}.")
         view.ViewTime = frozen_time
         animation = None
+        yield dict(total=1)
+        yield dict(start=True)
     else:
         if "Crop" in scene["Animation"]:
             time_range_in_M = scene["Animation"]["Crop"]
@@ -207,6 +214,7 @@ def render_frames(
             animation_window_num_frames = num_frames
             animation_window_time_range = time_range_in_M
             frame_window = (0, num_frames)
+        yield dict(total=animation_window_num_frames)
 
         # Setup animation so that sources can retrieve the `UPDATE_TIME_STEP`
         animation = pv.GetAnimationScene()
@@ -239,19 +247,9 @@ def render_frames(
                 animation.EndTime - animation.StartTime
             )
 
-        # Setup progress measuring already here so volume data computing for
-        # initial frame is measured
-        if show_progress and not no_render:
-            logging.getLogger().handlers = [TqdmLoggingHandler()]
-            animation_window_frame_range = tqdm.trange(
-                animation_window_num_frames,
-                desc="Rendering",
-                unit="frame",
-                miniters=1,
-                position=job_id,
-            )
-        else:
-            animation_window_frame_range = range(animation_window_num_frames)
+        # Report start of rendering here so volume data computing for initial
+        # frame is measured
+        yield dict(start=True)
 
         # Set the initial time step
         animation.GoToFirst()
@@ -561,6 +559,7 @@ def end_cue(self): pass
     if animation is None:
         pv.Render()
         pv.SaveScreenshot(os.path.join(frames_dir, "frame.png"))
+        yield dict(completed=1)
     else:
         # Iterate over frames manually to support filling in missing frames.
         # If `pv.SaveAnimation` would support that, here's how it could be
@@ -573,8 +572,8 @@ def end_cue(self): pass
         #     SuffixFormat='.%06d')
         # Note that `FrameWindow` appears to be buggy, so we set up the
         # `animation` according to the `frame_window` above so the frame files
-        # are numberd correctly.
-        for animation_window_frame_i in animation_window_frame_range:
+        # are numbered correctly.
+        for animation_window_frame_i in range(animation_window_num_frames):
             frame_i = frame_window[0] + animation_window_frame_i
             frame_file = os.path.join(frames_dir, f"frame.{frame_i:06d}.png")
             if render_missing_frames and os.path.exists(frame_file):
@@ -587,11 +586,8 @@ def end_cue(self): pass
             pv.Render()
             pv.SaveScreenshot(frame_file)
             logger.info(f"Rendered frame {frame_i}.")
+            yield dict(advance=1)
 
     logger.info(
         f"Rendering done. Total time: {time.time() - render_start_time:.2f}s"
     )
-
-
-def _render_frame_window(job_id, frame_window, **kwargs):
-    render_frames(job_id=job_id, frame_window=frame_window, **kwargs)

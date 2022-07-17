@@ -1,18 +1,31 @@
 import logging
 
-from tqdm import tqdm
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    ProgressColumn,
+    Task,
+    TaskProgressColumn,
+    TextColumn,
+    TimeRemainingColumn,
+)
+from rich.text import Text
 
 
-class TqdmLoggingHandler(logging.Handler):
-    def __init__(self, level=logging.NOTSET):
-        super(TqdmLoggingHandler, self).__init__(level)
+class RenderSpeedColumn(ProgressColumn):
+    def render(self, task: Task) -> Text:
+        speed = task.finished_speed or task.speed
+        if speed is None:
+            return Text("?", style="progress.data.speed")
+        return Text(f"{1/speed:.2f}s/frame", style="progress.data.speed")
 
-    def emit(self, record):
-        try:
-            msg = self.format(record)
-            tqdm.write(msg)
-            self.flush()
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except:
-            self.handleError(record)
+
+render_progress = Progress(
+    TextColumn("[progress.description]{task.description}"),
+    TaskProgressColumn(),
+    BarColumn(bar_width=None),
+    MofNCompleteColumn(),
+    RenderSpeedColumn(),
+    TimeRemainingColumn(),
+)
