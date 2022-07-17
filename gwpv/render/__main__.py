@@ -429,6 +429,10 @@ def main():
 
     args = parser.parse_args()
 
+    # Venv activation is handled at the start of the script
+    if args.entrypoint in ["scene", "scenes"]:
+        del args.activate_venv
+
     # Setup logging
     from rich.logging import RichHandler
 
