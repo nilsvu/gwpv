@@ -29,23 +29,23 @@ def _download_file(url, filename, task_id):
 
 
 def download_data(datasources):
-    with progress:
-        for datasource_name, datasource_config in datasources.items():
-            try:
-                url, cached_filename = parse_as.remote_file(datasource_config)
-            except ValueError:
-                continue
-            if os.path.exists(cached_filename):
-                logger.debug(
-                    f"Found cached {datasource_name} file '{cached_filename}'"
-                    f" for URL '{url}'"
-                )
-                continue
-            logger.info(
-                f"Downloading {datasource_name} file at URL '{url}' to cache"
-                f" '{cached_filename}'..."
+    for datasource_name, datasource_config in datasources.items():
+        try:
+            url, cached_filename = parse_as.remote_file(datasource_config)
+        except ValueError:
+            continue
+        if os.path.exists(cached_filename):
+            logger.debug(
+                f"Found cached {datasource_name} file '{cached_filename}'"
+                f" for URL '{url}'"
             )
-            os.makedirs(os.path.dirname(cached_filename), exist_ok=True)
+            continue
+        logger.info(
+            f"Downloading {datasource_name} file at URL '{url}' to cache"
+            f" '{cached_filename}'..."
+        )
+        os.makedirs(os.path.dirname(cached_filename), exist_ok=True)
+        with progress:
             progress.console.print(
                 f"Downloading [bold]{datasource_name}[/bold]"
             )
