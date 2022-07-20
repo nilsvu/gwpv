@@ -12,6 +12,7 @@ import paraview.simple as pv
 
 import gwpv.scene_configuration.color as config_color
 import gwpv.scene_configuration.transfer_functions as tf
+from gwpv.render.background import set_background
 from gwpv.scene_configuration import animate, camera_motion, parse_as
 
 if sys.version_info >= (3, 10):
@@ -62,7 +63,7 @@ def render_frames(
     show_preview=False,
 ):
     """Render the frames for the `scene`
-    
+
     This function `yield`s progress updates.
     """
     # Validate scene
@@ -85,49 +86,17 @@ def render_frames(
     if "Background" in scene["View"]:
         bg_config = scene["View"]["Background"]
         del scene["View"]["Background"]
-        if isinstance(bg_config, list):
-            if isinstance(bg_config[0], list):
-                assert len(bg_config) == 2, (
-                    "When 'Background' is a list of colors, it must have 2"
-                    " entries."
-                )
-                bg_config = dict(
-                    BackgroundColorMode="Gradient",
-                    Background=parse_as.color(bg_config[0]),
-                    Background2=parse_as.color(bg_config[1]),
-                )
-            else:
-                bg_config = dict(
-                    BackgroundColorMode="Single Color",
-                    Background=parse_as.color(bg_config),
-                )
-            bg_config["UseColorPaletteForBackground"] = 0
-            scene["View"].update(bg_config)
-            bg_config = None
     else:
         bg_config = None
     view = pv.CreateRenderView(**scene["View"])
     pv.AssignViewToLayout(view=view, layout=layout, hint=0)
 
-    # Set spherical background texture
-    if bg_config is not None:
-        bg_config["BackgroundColorMode"] = "Texture"
-        skybox_datasource = bg_config["Datasource"]
-        del bg_config["Datasource"]
-        background_texture = pvserver.rendering.ImageTexture(
-            FileName=parse_as.path(scene["Datasources"][skybox_datasource])
-        )
-        background_sphere = pv.Sphere(
-            Radius=bg_config["Radius"], ThetaResolution=100, PhiResolution=100
-        )
-        background_texture_map = pv.TextureMaptoSphere(Input=background_sphere)
-        pv.Show(
-            background_texture_map,
-            view,
-            Texture=background_texture,
-            BackfaceRepresentation="Cull Frontface",
-            Ambient=1.0,
-        )
+    # Set background
+    set_background(
+        bg_config=bg_config,
+        view=view,
+        datasources=scene.get("Datasources", None),
+    )
 
     # Load the waveform data file
     waveform_h5file, waveform_subfile = parse_as.file_and_subfile(
