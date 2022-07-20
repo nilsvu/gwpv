@@ -4,6 +4,7 @@ import os
 import time
 
 import numpy as np
+import rich.progress
 
 from gwpv.scene_configuration import parse_as
 
@@ -58,20 +59,30 @@ def cached_swsh_grid(
         import spherical
 
         logger.info("'spherical' module loaded.")
-        start_time = time.time()
-        th = np.arccos(z / r)
-        phi = np.arctan2(y, x)
-        angles = quaternionic.array.from_spherical_coordinates(th, phi)
-        swsh_grid = spherical.Wigner(ell_max).sYlm(s=spin_weight, R=angles)
-        logger.info(f"SWSH grid computed in {time.time() - start_time:.3f}s.")
-        if cache_dir:
-            if not os.path.exists(cache_dir):
-                os.makedirs(cache_dir)
-            if not os.path.exists(swsh_grid_cache_file):
-                np.save(swsh_grid_cache_file, swsh_grid)
-                logger.debug(
-                    f"SWSH grid cache saved to file '{swsh_grid_cache_file}'."
-                )
+        with rich.progress.Progress(
+            rich.progress.TextColumn(
+                "[progress.description]{task.description}"
+            ),
+            rich.progress.SpinnerColumn(
+                spinner_name="simpleDots", finished_text="... done."
+            ),
+            rich.progress.TimeElapsedColumn(),
+        ) as progress:
+            task_id = progress.add_task("Computing SWSH grid", total=1)
+            th = np.arccos(z / r)
+            phi = np.arctan2(y, x)
+            angles = quaternionic.array.from_spherical_coordinates(th, phi)
+            swsh_grid = spherical.Wigner(ell_max).sYlm(s=spin_weight, R=angles)
+            if cache_dir:
+                if not os.path.exists(cache_dir):
+                    os.makedirs(cache_dir)
+                if not os.path.exists(swsh_grid_cache_file):
+                    np.save(swsh_grid_cache_file, swsh_grid)
+                    logger.debug(
+                        "SWSH grid cache saved to file"
+                        f" '{swsh_grid_cache_file}'."
+                    )
+            progress.update(task_id, completed=1)
     return swsh_grid, r
 
 
