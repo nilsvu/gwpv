@@ -7,8 +7,8 @@ import matplotlib.animation as mpl_animation
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.image import imread
-from tqdm import tqdm
 
+from gwpv.progress import render_progress
 from gwpv.scene_configuration import parse_as
 
 
@@ -75,16 +75,21 @@ def render_waveform(scene, output_file, time_merger, mass, bounds=None):
     else:
         bounds = np.asarray(bounds)
 
-    # Transform time to seconds
-    M_in_s = (const.G / const.c**3 * const.M_sun * mass).value
-    time *= M_in_s
-    time_merger *= M_in_s
-    crop *= M_in_s
-    bounds *= M_in_s
+    if time_merger is not None and mass is not None:
+        # Transform time to seconds
+        M_in_s = (const.G / const.c**3 * const.M_sun * mass).value
+        time *= M_in_s
+        time_merger *= M_in_s
+        crop *= M_in_s
+        bounds *= M_in_s
 
-    num_extra_time = 100
-    time = np.hstack([time, np.linspace(time[-1], bounds[1], num_extra_time)])
-    waveform = np.vstack([waveform, num_extra_time * [waveform[-1]]])
+        num_extra_time = 100
+        time = np.hstack(
+            [time, np.linspace(time[-1], bounds[1], num_extra_time)]
+        )
+        waveform = np.vstack([waveform, num_extra_time * [waveform[-1]]])
+    else:
+        M_in_s = 1
 
     dpi = 100
     fig = plt.figure(dpi=dpi, tight_layout=True)
@@ -119,15 +124,16 @@ def render_waveform(scene, output_file, time_merger, mass, bounds=None):
         f" {num_frames} frames at {frame_rate} FPS."
     )
 
-    progress_bar = None
+    progress = render_progress
+    task_id = None
 
     def animation_init():
-        nonlocal progress_bar, plot_active, time_annotation
-        progress_bar = tqdm(total=num_frames, unit="frames")
+        nonlocal progress, task_id, num_frames, plot_active, time_annotation
+        task_id = progress.add_task("Rendering", total=num_frames)
         return plot_active, time_annotation
 
     def animation_update(t_now):
-        nonlocal progress_bar, plot_active, time_annotation, waveform, time, time_merger
+        nonlocal progress, task_id, plot_active, time_annotation, waveform, time, time_merger
         i_now = None
         for i, t_i in enumerate(time):
             if t_i >= t_now:
@@ -146,7 +152,7 @@ def render_waveform(scene, output_file, time_merger, mass, bounds=None):
                 time_annotation.remove()
             except ValueError:
                 pass
-        progress_bar.update(1)
+        progress.update(task_id, advance=1)
         return plot_active, time_annotation
 
     plt.savefig(output_file + ".png", dpi=dpi, facecolor="black")
@@ -161,12 +167,11 @@ def render_waveform(scene, output_file, time_merger, mass, bounds=None):
 
     Writer = mpl_animation.writers["ffmpeg"]
     writer = Writer(fps=frame_rate)
-    ani.save(
-        output_file + ".mp4",
-        writer=writer,
-        dpi=dpi,
-        savefig_kwargs=dict(facecolor="black"),
-    )
 
-    if progress_bar is not None:
-        progress_bar.close()
+    with progress:
+        ani.save(
+            output_file + ".mp4",
+            writer=writer,
+            dpi=dpi,
+            savefig_kwargs=dict(facecolor="black"),
+        )

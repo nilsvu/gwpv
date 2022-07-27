@@ -331,8 +331,8 @@ def main():
         nargs="+",
     )
     parser_waveform.add_argument("--output-file", "-o", required=True)
-    parser_waveform.add_argument("--time-merger", type=float, required=True)
-    parser_waveform.add_argument("--mass", type=float, required=True)
+    parser_waveform.add_argument("--time-merger", type=float, required=False)
+    parser_waveform.add_argument("--mass", type=float, required=False)
     parser_waveform.add_argument("--bounds", type=float, nargs=2)
 
     # Common CLI for all entrypoints
