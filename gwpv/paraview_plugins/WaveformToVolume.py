@@ -341,7 +341,7 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
 
         # Compute scaled waveform phase on the grid
         # r = vtknp.vtk_to_numpy(grid_data.GetPointData()['RadialCoordinate'])
-        phase = t - r
+        phase = t - r + self.activation_offset * self.radial_scale
 
         # Invert rotation direction
         rotation_direction = -1.0 if self.invert_rotation_direction else 1.0
