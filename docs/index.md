@@ -9,7 +9,6 @@ numerical simulation or a waveform model.
 ```{toctree}
 :hidden:
 
-self
 gallery
 ```
 
