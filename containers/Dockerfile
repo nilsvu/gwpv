@@ -1,3 +1,15 @@
+# How to update the container:
+#
+# 1. Build the dev container:
+#
+#     docker build -f containers/Dockerfile --target=dev -t nilsleiffischer/gwpv:latest-dev .
+#
+# 2. Push to Dockerhub
+#
+#     docker push nilsleiffischer/gwpv:latest-dev
+#
+# The production container (target 'app') is built automatically by CI.
+
 FROM ubuntu:latest AS dev
 USER root
 
@@ -11,6 +23,7 @@ RUN apt-get -yqq update \
       curl \
       ffmpeg \
       git \
+      make \
       python3 \
       python3-pip \
       python-is-python3 \
