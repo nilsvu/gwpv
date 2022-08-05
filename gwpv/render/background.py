@@ -7,10 +7,9 @@ from gwpv.scene_configuration import parse_as
 def set_background(bg_config, view, datasources):
     if isinstance(bg_config, list):
         if isinstance(bg_config[0], list):
-            assert len(bg_config) == 2, (
-                "When 'Background' is a list of colors, it must have 2"
-                " entries."
-            )
+            assert (
+                len(bg_config) == 2
+            ), "When 'Background' is a list of colors, it must have 2 entries."
             try:
                 view.BackgroundColorMode = "Gradient"
             except AttributeError:

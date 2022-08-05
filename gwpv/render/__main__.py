@@ -399,7 +399,7 @@ def main():
     # Setup tracebacks
     import rich.traceback
 
-    rich.traceback.install(show_locals=True, suppress=['paraview'])
+    rich.traceback.install(show_locals=True, suppress=["paraview"])
 
     # Re-launch the script with `pvpython` if necessary
     if args.entrypoint == "scene":
