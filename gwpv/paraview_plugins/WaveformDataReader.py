@@ -21,6 +21,31 @@ logger = logging.getLogger(__name__)
     file_description="HDF5 files",
 )
 class WaveformDataReader(VTKPythonAlgorithmBase):
+    """Read waveform data from an HDF5 file.
+
+    This plugin currently assumes the data in the 'Subfile' is stored in the
+    SpEC waveform file format. It is documented in Appendix A.3.1 in the 2019
+    SXS catalog paper (https://arxiv.org/abs/1904.04831). Specifically:
+
+    - Each mode is stored in a dataset named 'Y_l{l}_m{m}.dat'. So the structure
+      of the HDF5 file is:
+
+        {FileName}/{Subfile}/Y_l{l}_m{m}.dat
+
+      The subfile should contain at least the (2,2) mode (named Y_l2_m2.dat).
+    - For a typical SpEC simulation you would read the modes from the
+      'rhOverM_Asymptotic_GeometricUnits_CoM.h5' file and the
+      'Extrapolated_N2.dir' subfile.
+    - Each 'Y_l{l}_m{m}.dat' dataset has three columns:
+
+        1. Time
+        2. r * Re(h_lm)
+        3. r * Im(h_lm)
+
+      The 'Time' column should be the same for all datasets. It will only be
+      read from the (2,2) mode dataset.
+    """
+
     WAVEFORM_MODES_KEY = vtkkeys.MakeKey(
         vtkkeys.StringVectorKey, "WAVEFORM_MODES", "WaveformDataReader"
     )

@@ -20,6 +20,23 @@ logger = logging.getLogger(__name__)
     file_description="HDF5 files",
 )
 class TrajectoryDataReader(VTKPythonAlgorithmBase):
+    """Read trajectory data from an HDF5 file.
+
+    This plugin currently assumes the data in the 'Subfile' is stored in the
+    SpEC apparent horizon file format. It is documented in Appendix A.3.2 in the
+    2019 SXS catalog paper (https://arxiv.org/abs/1904.04831). Specifically:
+
+    - The HDF5 file should contain the following dataset:
+
+        {FileName}/{Subfile}/{CoordinatesDataset}
+
+      It should have four columns: Time, and the three coordinates of the
+      trajectory.
+    - For a typical SpEC simulation you would read the trajectory data from the
+      'Horizons.h5' file and one of the 'AhA.dir', 'AhB.dir', or 'AhC.dir'
+      subfiles. The dataset is named 'CoordCenterInertial.dat'.
+    """
+
     def __init__(self):
         VTKPythonAlgorithmBase.__init__(
             self, nInputPorts=0, nOutputPorts=1, outputType="vtkPolyData"

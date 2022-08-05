@@ -108,3 +108,5 @@ Datasources:
     Subfile: Extrapolated_N2.dir
     Cache: ./waveform_data_cache
 ```
+
+The supported data formats are listed on the [Data formats](dataformats) page.

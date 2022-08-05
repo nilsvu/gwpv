@@ -18,5 +18,6 @@ gallery
 
 installation
 usage
+dataformats
 gui
 ```
