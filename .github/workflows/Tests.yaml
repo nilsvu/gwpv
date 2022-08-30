@@ -34,6 +34,7 @@ jobs:
   #         tags: latest-dev
   #         always_pull: true
   #         cache_froms: nilsleiffischer/gwpv:latest-dev
+
   tests:
     name: Tests
     runs-on: ubuntu-latest
@@ -67,6 +68,7 @@ jobs:
       #   run: >
       #     gwrender waveform $GITHUB_WORKSPACE/Examples/Rainbow/Rainbow.yaml
       #     --time-merger 5064 --mass 150 -o ./ -v
+
   lint:
     name: Formatting and linting
     runs-on: ubuntu-latest
@@ -81,7 +83,7 @@ jobs:
           args: --check .
 
   docs:
-    name: Deploy documentation
+    name: Build documentation
     needs: tests
     runs-on: ubuntu-latest
     container: nilsleiffischer/gwpv:latest-dev
@@ -97,14 +99,41 @@ jobs:
         run: |
           cd docs
           make html
-      - name: Deploy to gh-pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
-        uses: peaceiris/actions-gh-pages@v3
+      # Not using actions/upload-pages-artifact for now because of issue
+      # https://github.com/actions/upload-pages-artifact/issues/20
+      # - uses: actions/upload-pages-artifact@v1
+      #   with:
+      #     path: docs/_build/html
+      - name: Prepare pages artifact
+        run: |
+          tar \
+            --dereference --hard-dereference \
+            --directory docs/_build/html \
+            -cvf docs/_build/html.tar \
+            --exclude=.git \
+            --exclude=.github \
+            .
+      - uses: actions/upload-artifact@v3
         with:
-          publish_dir: docs/_build/html
-          publish_branch: gh-pages
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          force_orphan: true
+          name: github-pages
+          path: docs/_build/html.tar
+          retention-days: 1
+
+  docs-deploy:
+    name: Deploy documentation
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    needs: docs
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v1
+        id: deploy
+
   deploy-container:
     name: Deploy container
     needs: tests
