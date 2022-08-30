@@ -122,8 +122,10 @@ jobs:
           file: containers/Dockerfile
           target: app
           tags: nilsleiffischer/gwpv:latest
-          cache-from: type=registry,ref=nilsleiffischer/gwpv:latest-dev
           push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   examples:
     name: Examples
     needs: deploy-container
