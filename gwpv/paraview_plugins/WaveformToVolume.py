@@ -192,6 +192,11 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         self.keep_every_n_timestep = value
         self.Modified()
 
+    @smproperty.doublevector(name="TimeOffset", default_values=0)
+    def SetTimeOffset(self, value):
+        self.time_offset = value
+        self.Modified()
+
     # Not needed when using SwshGrid input
     @smproperty.intvector(name="EllMax", default_values=2)
     def SetEllMax(self, value):
@@ -258,7 +263,9 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         ts = waveform_data.RowData["Time"]
         # Using a few timesteps within the data range so we can animate through
         # them in the GUI
-        return np.linspace(ts[0], ts[-1], 100)
+        return np.linspace(
+            ts[0] + self.time_offset, ts[-1] + self.time_offset, 100
+        )
 
     @smproperty.doublevector(
         name="TimestepValues",
@@ -302,7 +309,7 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         # grid_data = self._get_grid_data()
         output = dsa.WrapDataObject(vtkUniformGrid.GetData(outInfo))
 
-        t = timesteps_util.get_timestep(self, logger=logger)
+        t = timesteps_util.get_timestep(self, logger=logger) - self.time_offset
         N = self.num_points_per_dim
         D = self.size
 
@@ -349,7 +356,7 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         # Compute strain in the volume from the input waveform data
         skip_timesteps = self.keep_every_n_timestep
         waveform_timesteps = waveform_data.RowData["Time"][::skip_timesteps]
-        strain = np.zeros(len(r), dtype=np.complex)
+        strain = np.zeros(len(r), dtype=complex)
         # Optimization for when the waveform is sampled uniformly
         # TODO: Cache this
         dt = np.diff(waveform_timesteps)
@@ -401,7 +408,7 @@ class WaveformToVolume(VTKPythonAlgorithmBase):
         for l in range(abs(spin_weight), ell_max + 1):
             for abs_m in range(0, l + 1):
                 mode_name = get_mode_name(l, abs_m)
-                strain_mode = np.zeros(len(r), dtype=np.complex)
+                strain_mode = np.zeros(len(r), dtype=complex)
                 if not self.modes_selection.ArrayIsEnabled(mode_name):
                     continue
                 for sign_m in (-1, 1):
