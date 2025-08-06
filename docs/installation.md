@@ -25,68 +25,55 @@ configuration files and data available in the container (see [Usage](usage)).
 
 1. Install ParaView (v5.10 or above). You can
    [download a pre-built binary](https://www.paraview.org/download/)
-   or use [Spack](https://spack.readthedocs.io/en/latest/) to configure a build
-   to your liking and compile it from source. Make sure to install ParaView with
-   support for Python 3.
-2. Create a [virtual environment](https://docs.python.org/3/tutorial/venv.html)
-   with ParaView's Python. You could do this:
+   or use [Spack](https://spack.readthedocs.io/en/latest/) to compile it from
+   source. For example, download ParaView 6.0 for a Linux machine like this:
    ```sh
-   path/to/python3 -m venv path/to/new/env
+   wget -O paraview.tar.gz "https://www.paraview.org/paraview-downloads/download.php?submit=Download&version=v6.0&type=binary&os=Linux&downloadFile=ParaView-6.0.0-RC3-MPI-Linux-Python3.12-x86_64.tar.gz"
+   tar -xzf paraview.tar.gz
+   mv ParaView-* paraview
+   rm paraview.tar.gz
+   export PARAVIEW_DIR=$PWD/paraview
+   # optional: add to PATH
+   export PATH="$PARAVIEW_DIR/bin:$PATH"
    ```
-   Make sure to set up the environment with the same Python installation that
-   ParaView uses. If you are unsure, try this:
+2. Create a Python environment with the same Python version as your ParaView
+   installation. To find out what Python version ParaView uses you can do this:
    ```sh
-   # Start interactive ParaView Python shell
-   path/to/pvpython
-   # Output path to the Python executable
-   >>> import sys
-   >>> sys.executable
-   ```
-   On macOS the `pvpython` executable is typically located in
-   `/Applications/ParaView-X.Y.Z.app/Contents/bin`. The Python executable
-   determined by the script above may be named `vtkpython`, in which case you
-   can look for the `python3` executable in the same directory or a `bin`
-   subdirectory. If you can't find ParaView's Python executable, try using a
-   Python installation with the same version as ParaView's.
-3. Give ParaView access to the environment. If you have created the environment
-   with Python 3's `venv` then copy the `scripts/activate_this.py` script to the
-   environment:
-
-   ```sh
-   cp scripts/activate_this.py path/to/new/env/bin
+   $PARAVIEW_DIR/bin/pvpython -c "import sys; print(sys.version)"
    ```
 
-   Note that environments created with the `virtualenv` package include this
-   script automatically and you don't need to copy it. The script is used to
-   activate the environment from within Python scripts. It allows ParaView's
-   Python to pick up the packages installed in the environment (see [this blog
-   post for details](https://blog.kitware.com/using-pvpython-and-virtualenv/)).
-
-   You may also want to add the ParaView executables such as `pvpython` to your
-   `PATH` when the environment is activated for convenient access. To do so you
-   can append the following line to `path/to/env/bin/activate` as well:
-
+   If you don't have this Python version already installed, one way to install
+   it is with [pyenv](https://github.com/pyenv/pyenv.git):
    ```sh
-   export PATH="path/to/paraview/bin/:$PATH"
+   export PYENV_ROOT="$HOME/.pyenv"  # change location if you prefer
+   git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT
+   export PATH="$PYENV_ROOT/bin:$PATH"
+   eval "$(pyenv init - bash)"
+   pyenv install 3.12  # or whatever version ParaView uses
+   pyenv shell 3.12  # select the Python version for this shell
    ```
 
-   On macOS you may also need to append this line to pick up the `paraview` GUI
-   executable:
-
+   Now create a [virtual environment](https://docs.python.org/3/tutorial/venv.html)
+   with this Python version where you can install packages:
    ```sh
-   export PATH="path/to/paraview/MacOS/:$PATH"
+   export VENV_DIR=$HOME/envs/gwpv  # change to your preferred location
+   python3 -m venv $VENV_DIR
+   source $VENV_DIR/bin/activate
    ```
-
-4. Install the following packages in the environment, making sure to use
-   ParaView's HDF5 when installing `h5py`:
+3. Install `gwpv` in the Python environment:
    ```sh
-   . env/bin/activate
-   HDF5_DIR=path/to/paraview/hdf5/ pip install --no-binary=h5py h5py
    pip install [-e] path/to/this/repository
    ```
-   Note that the `HDF5_DIR` should have `include` and `lib` directories with
-   ParaView's HDF5. On macOS it is typically
-   `/Applications/ParaView-X.Y.Z.app/Contents/`. Add the `-e` flag when
-   installing this repository's Python package to install it in "editable" mode,
-   i.e. symlink instead of copy it so changes to the repository are reflected in
-   the installation.
+   The optional `-e` flag installs `gwpv` in "editable" mode, i.e. symlinks
+   instead of copies it so changes to the repository are reflected in the
+   installation.
+4. Point the Python environment to your ParaView installation. You can do this
+   by adding a `.pth` file to the Python environment:
+   ```sh
+   echo "$PARAVIEW_DIR/lib/python3.12/site-packages/" > $VENV_DIR/lib/python3.12/site-packages/paraview.pth
+   ```
+
+   Alternatively, you can set the `PYTHONPATH` environment variable:
+   ```sh
+   export PYTHONPATH=$PARAVIEW_DIR/lib/python3.12/site-packages:$PYTHONPATH
+   ```
