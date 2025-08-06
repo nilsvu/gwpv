@@ -47,9 +47,7 @@ def set_size(fig, size, dpi=100, eps=1e-2, give_up=2, min_size_px=10):
 def render_waveform(scene, output_file, time_merger, mass, bounds=None):
     logger = logging.getLogger(__name__)
 
-    waveform_data = sxs.load(
-        **parse_as.sxs_location(scene["Datasources"]["Waveform"])
-    )
+    waveform_data = parse_as.waveform(scene["Datasources"]["Waveform"])
     waveform = np.real(waveform_data[:, waveform_data.index(2, 2)])
     time = waveform_data.time
     logger.debug(

@@ -83,3 +83,11 @@ def sxs_location(config):
             location=config.get("Location") or config.get("File"),
             group=config.get("Group") or config.get("Subfile"),
         )
+
+def waveform(config):
+    """Load waveform data given as SXS ID, file name, or URL."""
+    location = sxs_location(config)
+    waveform_data = sxs.load(**location)
+    if isinstance(waveform_data, sxs.simulations.simulation.SimulationBase):
+        waveform_data = waveform_data.h
+    return waveform_data

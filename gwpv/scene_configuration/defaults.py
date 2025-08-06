@@ -50,9 +50,7 @@ def apply_defaults(scene):
         and "Size" in scene["WaveformToVolume"]
         and "RadialScale" in scene["WaveformToVolume"]
     ):
-        waveform_data = sxs.load(
-            **parse_as.sxs_location(scene["Datasources"]["Waveform"])
-        )
+        waveform_data = parse_as.waveform(scene["Datasources"]["Waveform"])
         t0, t1 = waveform_data.time[[0, -1]]
         domain_radius = (
             scene["WaveformToVolume"]["Size"]
@@ -109,9 +107,7 @@ def apply_defaults(scene):
         if "NumPeaks" not in peaks_config:
             peaks_config["NumPeaks"] = 10
         if "FirstPeak" not in peaks_config and "LastPeak" not in peaks_config:
-            waveform_data = sxs.load(
-                **parse_as.sxs_location(scene["Datasources"]["Waveform"])
-            )
+            waveform_data = parse_as.sxs_load_waveform(scene["Datasources"]["Waveform"])
             mode_data = waveform_data[:, waveform_data.index(2, 2)]
             mode_max = np.max(np.abs(mode_data))
             pos_first_peak, pos_last_peak = 0.01 * mode_max, 0.2 * mode_max

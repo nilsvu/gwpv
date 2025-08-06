@@ -64,9 +64,7 @@ def render_parallel(
                 scene["Animation"]["Crop"][1] - scene["Animation"]["Crop"][0]
             )
         else:
-            waveform = sxs.load(
-                **parse_as.sxs_location(scene["Datasources"]["Waveform"])
-            )
+            waveform = parse_as.waveform(scene["Datasources"]["Waveform"])
             waveform_times = waveform.time
             max_animation_length = waveform_times[-1] - waveform_times[0]
             logger.debug(

@@ -101,8 +101,8 @@ def render_frames(
     # Load the waveform data file
     waveform_location = parse_as.sxs_location(scene["Datasources"]["Waveform"])
     waveform_data = WaveformDataReader(
-        FileName=waveform_location["location"],
-        Subfile=waveform_location["group"],
+        SxsLocation=waveform_location["location"],
+        Subfile=waveform_location.get("group"),
     )
     pv.UpdatePipeline()
 

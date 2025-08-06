@@ -59,6 +59,7 @@ class WaveformDataReader(VTKPythonAlgorithmBase):
             self, nInputPorts=0, nOutputPorts=1, outputType="vtkTable"
         )
         self._filename = None
+        self._sxs_location = None
         self._subfile = None
         self.waveform_data = None
         self.mode_names = []
@@ -70,10 +71,18 @@ class WaveformDataReader(VTKPythonAlgorithmBase):
         self._filename = value
         self.Modified()
 
+    @smproperty.stringvector(name="SxsLocation", number_of_elements="1")
+    def SetSxsLocation(self, value):
+        self._sxs_location = value
+        self.Modified()
+
     @smproperty.stringvector(name="SubfileList", information_only="1")
     def GetSubfiles(self):
-        with h5py.File(self._filename, "r") as open_h5file:
-            return list(all_subfiles(open_h5file))
+        if self._filename and self._filename != "None":
+            with h5py.File(self._filename, "r") as open_h5file:
+                return list(all_subfiles(open_h5file))
+        else:
+            return []
 
     @smproperty.stringvector(name="Subfile", number_of_elements="1")
     @smdomain.xml(
@@ -99,22 +108,25 @@ class WaveformDataReader(VTKPythonAlgorithmBase):
         # a subset of modes to display, for example.
         if self._filename is not None and self._subfile is not None:
             self.waveform_data = sxs.load(self._filename, group=self._subfile)
-            self.mode_names = [f"Y_l{l}_m{m}" for l, m in self.waveform_data.LM]
-            if len(self.mode_names) == 0:
-                logger.warning(
-                    "No waveform mode datasets found in file"
-                    f" '{self._filename}:{self._subfile}'."
-                )
-            logger.debug("Set MODE_ARRAYS: {}".format(self.mode_names))
-            info.Remove(WaveformDataReader.WAVEFORM_MODES_KEY)
-            for mode_name in self.mode_names:
-                info.Append(WaveformDataReader.WAVEFORM_MODES_KEY, mode_name)
-            # Make the `WAVEFORM_MODES` propagate downstream.
-            # TODO: This doesn't seem to be working...
-            request.AppendUnique(
-                self.GetExecutive().KEYS_TO_COPY(),
-                WaveformDataReader.WAVEFORM_MODES_KEY,
+        elif self._sxs_location is not None:
+            self.waveform_data = sxs.load(self._sxs_location, group=self._subfile)
+            if isinstance(self.waveform_data, sxs.simulations.simulation.SimulationBase):
+                self.waveform_data = self.waveform_data.h
+        self.mode_names = [f"Y_l{l}_m{m}" for l, m in self.waveform_data.LM]
+        if len(self.mode_names) == 0:
+            logger.warning(
+                "No waveform mode datasets found in file."
             )
+        logger.debug("Set MODE_ARRAYS: {}".format(self.mode_names))
+        info.Remove(WaveformDataReader.WAVEFORM_MODES_KEY)
+        for mode_name in self.mode_names:
+            info.Append(WaveformDataReader.WAVEFORM_MODES_KEY, mode_name)
+        # Make the `WAVEFORM_MODES` propagate downstream.
+        # TODO: This doesn't seem to be working...
+        request.AppendUnique(
+            self.GetExecutive().KEYS_TO_COPY(),
+            WaveformDataReader.WAVEFORM_MODES_KEY,
+        )
         logger.debug(f"Information object: {info}")
         return 1
 
@@ -124,11 +136,7 @@ class WaveformDataReader(VTKPythonAlgorithmBase):
 
         output = dsa.WrapDataObject(vtkTable.GetData(outInfo))
 
-        if (
-            self._filename is not None
-            and self._subfile is not None
-            and len(self.mode_names) > 0
-        ):
+        if self.mode_names:
             # Read time
             col_time = vtknp.numpy_to_vtk(self.waveform_data.time, deep=False)
             col_time.SetName("Time")
