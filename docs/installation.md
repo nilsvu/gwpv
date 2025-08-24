@@ -23,7 +23,7 @@ configuration files and data available in the container (see [Usage](usage)).
 
 ## Option 2: Native environment
 
-1. Install ParaView (v5.10 or above). You can
+1. Install ParaView (v5.13 or above). You can
    [download a pre-built binary](https://www.paraview.org/download/)
    or use [Spack](https://spack.readthedocs.io/en/latest/) to compile it from
    source. For example, download ParaView 6.0 for a Linux machine like this:
