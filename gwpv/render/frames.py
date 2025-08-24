@@ -404,7 +404,7 @@ def render_frames(
             # Try to make horizon surfaces smooth. At low angular resoluton
             # they still show artifacts, so perhaps more can be done.
             horizon = pv.ExtractSurface(Input=horizon)
-            horizon = pv.GenerateSurfaceNormals(Input=horizon)
+            horizon = pv.SurfaceNormals(Input=horizon)
             horizon_rep_config = horizon_config.get("Representation", {})
             if "Representation" not in horizon_rep_config:
                 horizon_rep_config["Representation"] = "Surface"
